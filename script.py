@@ -6,8 +6,8 @@ import eyed3       # For reading ID3 tags from mp3 files
 import re          # RegEx - extracting year from given string
 import json        # JSON Management
 
-from typing import List, Tuple
-from tqdm.auto import tqdm
+from typing     import List, Tuple
+from tqdm.auto  import tqdm
 from fuzzywuzzy import fuzz
 
 '''
@@ -24,18 +24,27 @@ BASIC PROCESS:
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 eyed3.log.setLevel("ERROR")
 
-DEBUG          = True
-DEBUG_MORE     = True
-MODIFY_MP3     = True
-LOOK_FOR_ORIGINAL = True
-FILE_EXTENSION = "m4a"
-SEARCH_URL     = "https://slavart.gamesdrive.net/api/search"
-DOWNLOAD_URL   = "https://slavart-api.gamesdrive.net/api/download/track"
-MP3_FOLDER     = "/Users/yegormyropoltsev/Desktop/mp3"
-FLAC_FOLDER    = "/Users/yegormyropoltsev/Desktop/flac"
-EXCLUDE_ITEMS  = ["Instrumental", "Karaoke"]
+'''
+DO NOT CHANGE IT! CONSTANTS
+'''
 SIMILARITY_VALUE = 90
+SEARCH_URL       = "https://slavart.gamesdrive.net/api/search"
+DOWNLOAD_URL     = "https://slavart-api.gamesdrive.net/api/download/track"
+EXCLUDE_ITEMS    = ["Instrumental", "Karaoke"]
 KEYWORDS_TO_DELETE_AFTER = ["feat", ",", "&", "("]
+'''
+DO NOT CHANGE IT! CONSTANTS
+'''
+
+DEBUG               = True
+DEBUG_COMPLEX       = True
+LOOK_FOR_ORIGINAL   = True
+RENAME_SOURCE_FILES = True
+SOURCE_FOLDER       = "/Users/yegormyropoltsev/Desktop/mp3"
+FLAC_FOLDER         = "/Users/yegormyropoltsev/Desktop/flac"
+SOURCE_EXTENSION    = "m4a"
+
+
 
 def check_and_remove_after_keyword(input_string: str) -> str:
     """
@@ -67,7 +76,7 @@ def has_cyrillic(text: str) -> bool:
     """
     return bool(re.search('[а-яА-Я]', text))
 
-def change_file_extension(file_path: str, new_extension: str) -> None:
+def change_SOURCE_EXTENSION(file_path: str, new_extension: str) -> None:
     """
     Change the file extension of a given file path.
 
@@ -82,17 +91,17 @@ def change_file_extension(file_path: str, new_extension: str) -> None:
     new_file_path = f"{base_path}.{new_extension}"
     os.rename(file_path, new_file_path)
 
-def get_artist_and_title(mp3_folder_file: str) -> Tuple[str, str]:
+def get_artist_and_title(SOURCE_FOLDER_file: str) -> Tuple[str, str]:
     """
     Extracts the artist and title information from an MP3 file.
 
     Args:
-        mp3_folder_file (str): The path to the MP3 file.
+        SOURCE_FOLDER_file (str): The path to the MP3 file.
 
     Returns:
         tuple: A tuple containing the artist and title extracted from the MP3 file. If the MP3 file does not have tag information, returns (None, None).
     """
-    audiofile = eyed3.load(mp3_folder_file)
+    audiofile = eyed3.load(SOURCE_FOLDER_file)
     
     if audiofile.tag:
         if DEBUG:
@@ -127,7 +136,7 @@ def get_json(artist: str, title: str) -> List[dict]:
     response = requests.get(url)
     try:
         json_data = response.json()
-        if DEBUG_MORE:
+        if DEBUG_COMPLEX:
             print(f"Parsed JSON \"{artist} - {title}\"")
         return json_data['tracks']['items']
     except json.decoder.JSONDecodeError as e:
@@ -146,7 +155,7 @@ def parse_json(data: dict, key: str):
     Returns:
         The value of the specified key from the JSON object.
     """
-    if DEBUG_MORE:
+    if DEBUG_COMPLEX:
         print(f"Parsed {key} \"{data[key]}\"")
     return data[key]
 
@@ -295,8 +304,8 @@ def fetch_flac(source_file_path, flac_folder_path):
 
         if os.path.exists(os.path.join(flac_folder_path, filename)):
             print("File already exists. Skipping...")
-            if MODIFY_MP3:
-                change_file_extension(source_file_path, "mp3f")
+            if RENAME_SOURCE_FILES:
+                change_SOURCE_EXTENSION(source_file_path, "mp3f")
                 print("MP3 file has been changed")
             break
 
@@ -310,8 +319,8 @@ def fetch_flac(source_file_path, flac_folder_path):
                     print("FLAC is being downloaded")
                     is_found = True
                     download_file_bar(track_id, flac_folder_path, filename)
-                    if MODIFY_MP3:
-                        change_file_extension(source_file_path, "mp3f")
+                    if RENAME_SOURCE_FILES:
+                        change_SOURCE_EXTENSION(source_file_path, "mp3f")
                         print("MP3 file has been changed")
                     break
                 elif user_input == '2':
@@ -327,8 +336,8 @@ def fetch_flac(source_file_path, flac_folder_path):
             if similarity_ratio >= SIMILARITY_VALUE:
                 print("FLAC is being downloaded")
                 download_file_bar(track_id, flac_folder_path, filename)
-                if MODIFY_MP3:
-                    change_file_extension(source_file_path, "mp3f")
+                if RENAME_SOURCE_FILES:
+                    change_SOURCE_EXTENSION(source_file_path, "mp3f")
                     print("MP3 file has been changed")
                 break
 
@@ -336,9 +345,9 @@ def fetch_flac(source_file_path, flac_folder_path):
 
 
 def main():
-    for filename in os.listdir(MP3_FOLDER):
+    for filename in os.listdir(SOURCE_FOLDER):
         if filename.endswith(".mp3"):
-            mp3_filepath = os.path.join(MP3_FOLDER, filename)
+            mp3_filepath = os.path.join(SOURCE_FOLDER, filename)
             try:
                 fetch_flac(mp3_filepath, FLAC_FOLDER)
             except Exception as e:
