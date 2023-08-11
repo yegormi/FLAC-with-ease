@@ -1,14 +1,14 @@
-import os          # For renaming and placing files
-import shutil      # For downloading file
-import requests    # For making an HTTP request
-import urllib3     # To supress unsecure HTTP requests
-import eyed3       # For reading ID3 tags from mp3 files
-import re          # RegEx - extracting year from given string
-import json        # JSON Management
+import json     # JSON Management
+import os       # For renaming and placing files
+import re       # RegEx - extracting year from given string
+import shutil   # For downloading file
+from typing import List, Tuple  # Type hints
 
-from typing     import List, Tuple
-from tqdm.auto  import tqdm
+import eyed3    # For reading ID3 tags from mp3 files
+import requests # For making an HTTP request
+import urllib3  # To supress unsecure HTTP requests
 from fuzzywuzzy import fuzz
+from tqdm.auto  import tqdm
 
 '''
 BASIC PROCESS:
@@ -186,6 +186,7 @@ def get_url(track_id: int) -> str:
     return url
 
 import requests
+
 
 def download(track_id: int) -> requests.Response:
     """
