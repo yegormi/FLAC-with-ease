@@ -293,6 +293,15 @@ def check_for_existence(source_file_path, flac_folder_path, flac_filename):
         check_and_rename(source_file_path, "mp3f")
 
 def check_for_exceptions(title):
+    """
+    Check for any exceptions in the given title.
+    
+    Parameters:
+        title (str): The title to check for exceptions.
+        
+    Returns:
+        bool: True if an exception is found, False otherwise.
+    """
     is_exception = is_word_present(title, EXCLUDE_ITEMS)
     if is_exception:
         print("An exception! Heading to the next one...\n")
@@ -300,6 +309,16 @@ def check_for_exceptions(title):
     return False
 
 def song_handling():
+    """
+    Handles the user interaction for song handling.
+    
+    This function prompts the user with options for handling a song and 
+    returns the appropriate action based on the user's choice.
+    
+    Returns:
+        Action: The action to be taken for the song. It can be 
+        Action.download, Action.skip, or Action.exit.
+    """
     while True:
         print("Does this song match your request?")
         print("    1. Download")
@@ -313,10 +332,20 @@ def song_handling():
         elif user_input == '3':
             return Action.exit
         else:
-            print("Invalid input. Please enter '1' or '2'.")
+            print("Invalid input. Please enter '1' or '2' or '3'.")
 
 
 def is_similar(string1: str, string2: str) -> bool:
+    """
+    Check if two strings are similar based on their token set ratio.
+    
+    Parameters:
+        string1 (str): The first string to compare.
+        string2 (str): The second string to compare.
+        
+    Returns:
+        bool: True if the similarity ratio is greater than or equal to SIMILARITY_VALUE, False otherwise.
+    """
     similarity_ratio = fuzz.token_set_ratio(string1, string2)
     print("Similarity:", similarity_ratio)
     return similarity_ratio >= SIMILARITY_VALUE
@@ -331,17 +360,7 @@ def perform_download(track_id: int, folder_path: str, filename: str) -> None:
     download_file_with_progress_bar(track_id, folder_path, filename)
 
 
-def fetch_flac(source_file_path, flac_folder_path):
-    """
-    Fetches FLAC files based on the provided MP3 path and saves them in the FLAC folder.
-
-    Parameters:
-    - source_file_path (str): The path of the MP3 file.
-    - destination_path (str): The folder where the FLAC files will be saved.
-
-    Returns:
-        - None
-    """
+def fetch_flac(source_file_path: str, flac_folder_path: str) -> None:
     is_found = False
     artist_local, title_local = get_artist_and_title(source_file_path)
     list_of_songs = get_json(artist_local, title_local)
@@ -365,7 +384,7 @@ def fetch_flac(source_file_path, flac_folder_path):
 
         check_for_exceptions(title)
         check_for_existence(source_file_path, flac_folder_path, filename)
-        
+
         song_action = song_handling()
         if (has_cyrillic(name_local) or has_cyrillic(name_json) and not is_found):
             if song_action == Action.download:
