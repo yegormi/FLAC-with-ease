@@ -210,7 +210,7 @@ def download(track_id: int) -> requests.Response:
     return None
 
 
-def download_file_bar(track_id: str, destination: str, filename: str) -> None:
+def download_file_with_progress_bar(track_id: str, destination: str, filename: str) -> None:
     """
     Download a file from a given URL and display a progress bar.
     
@@ -314,7 +314,7 @@ def fetch_flac(source_file_path, flac_folder_path):
                 if user_input == '1':
                     print("FLAC is being downloaded")
                     is_found = True
-                    download_file_bar(track_id, flac_folder_path, filename)
+                    download_file_with_progress_bar(track_id, flac_folder_path, filename)
                     if RENAME_SOURCE_FILES:
                         change_file_extension(source_file_path, "mp3f")
                         print("MP3 file has been changed")
@@ -337,7 +337,7 @@ def fetch_flac(source_file_path, flac_folder_path):
 
             if similarity_ratio >= SIMILARITY_VALUE:
                 print("FLAC is being downloaded")
-                download_file_bar(track_id, flac_folder_path, filename)
+                download_file_with_progress_bar(track_id, flac_folder_path, filename)
                 if RENAME_SOURCE_FILES:
                     change_file_extension(source_file_path, "mp3f")
                     print("MP3 file has been changed")
