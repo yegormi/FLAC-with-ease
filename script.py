@@ -155,18 +155,18 @@ def parse_json(data: dict, key: str):
         print(f"Parsed {key} \"{data[key]}\"")
     return data[key]
 
-def contains_year(text):
+def parse_year(text):
     """
-    Check if the given text contains a year.
+    Parse the year from the given text.
 
     Parameters:
-        text (str): The text to be checked.
+        text (str): The text to search for a year.
 
     Returns:
-        int or bool: The year found in the text, as an integer, if found. False otherwise.
+        str: The parsed year as an integer if found, or an empty string if not found.
     """
     match = re.search(r'\b\d{4}\b', text)
-    return int(match.group()) if match else False
+    return match.group() if match else ""
 
 def get_url(track_id: int) -> str:
     """
@@ -202,7 +202,7 @@ def download(track_id: int) -> requests.Response:
         if DEBUG:
             print("Response:", response.status_code)
         return response
-
+    
     except Exception as e:
         print("An error occurred:", str(e))
         # You can add additional error handling or logging here
@@ -240,7 +240,7 @@ def download_file_with_progress_bar(track_id: str, destination: str, filename: s
                 # Print a newline character to separate the progress bar from other output
                 print("\n")
 
-def check_words_in_string(input_string: str, word_dict: List[str]) -> bool:
+def is_word_present(input_string: str, word_dict: List[str]) -> bool:
     """
     Check if any word from the word dictionary is present in the input string.
 
@@ -252,6 +252,33 @@ def check_words_in_string(input_string: str, word_dict: List[str]) -> bool:
         bool: True if any word from word_dict is found in the input_string, False otherwise.
     """
     return any(word in input_string for word in word_dict)
+
+def generate_filename(data):
+    """
+    Generate a filename for a FLAC audio file based on the given data.
+
+    Parameters:
+        data (dict): The data used to generate the filename. It should contain the following keys:
+            - 'performer' (str): The name of the artist.
+            - 'title' (str): The title of the audio file.
+            - 'maximum_bit_depth' (int): The maximum bit depth of the audio file.
+            - 'maximum_sampling_rate' (float): The maximum sampling rate of the audio file.
+            - 'copyright' (str): The copyright information.
+
+    Returns:
+        str: The generated filename for the FLAC audio file.
+    """
+    artist        = parse_json(parse_json(data, "performer"), "name")
+    title         = parse_json(data, "title")
+    bit_depth     = parse_json(data, "maximum_bit_depth")
+    sampling_rate = parse_json(data, "maximum_sampling_rate")
+    copyright     = parse_json(data, "copyright")
+    year          = parse_year(copyright)
+    filename      = f"{artist} - {title} ({year}) [FLAC] [{bit_depth}B - {sampling_rate}kHz].flac"
+    filename      = filename.replace("/", "-")
+    
+    return filename
+
 
 def fetch_flac(source_file_path, flac_folder_path):
     """
@@ -278,31 +305,22 @@ def fetch_flac(source_file_path, flac_folder_path):
             is_found = False
             continue
 
-        artist        = parse_json(parse_json(data, "performer"), "name")
-        title         = parse_json(data, "title")
-        bit_depth     = parse_json(data, "maximum_bit_depth")
-        sampling_rate = parse_json(data, "maximum_sampling_rate")
-        print(f"    Found: {artist} - {title} [{bit_depth}B - {sampling_rate}kHz]")
+        artist   = parse_json(parse_json(data, "performer"), "name")
+        title    = parse_json(data, "title")
+        track_id = parse_json(data, "id")
+        filename = generate_filename(data)
+        print("    Found:", filename)
 
-        isContains = check_words_in_string(title, EXCLUDE_ITEMS)
-        if isContains:
+        is_containing = is_word_present(title, EXCLUDE_ITEMS)
+        if is_containing:
             print("An exception! Heading to the next one...")
             continue
         
         name_json = f"{artist} - {title}"
-        track_id  = parse_json(data, "id")
-        copyright = parse_json(data, "copyright")
-        year      = contains_year(copyright) if contains_year(copyright) else ""
-            
-        filename = f"{artist} - {title} ({year}) [FLAC] [{bit_depth}B - {sampling_rate}kHz].flac"
-        filename = filename.replace("/", "-")
 
         if os.path.exists(os.path.join(flac_folder_path, filename)):
             print("File already exists. Skipping...")
-            if RENAME_SOURCE_FILES:
-                change_file_extension(source_file_path, "mp3f")
-                print("MP3 file has been changed")
-            break
+            check_and_rename(source_file_path, "mp3f")
 
         if (has_cyrillic(name_local) or has_cyrillic(name_json)) and not is_found:
             while True:
@@ -312,12 +330,10 @@ def fetch_flac(source_file_path, flac_folder_path):
                 print("3. EXIT")
                 user_input = input()
                 if user_input == '1':
-                    print("FLAC is being downloaded")
                     is_found = True
+                    print("FLAC is being downloaded")
                     download_file_with_progress_bar(track_id, flac_folder_path, filename)
-                    if RENAME_SOURCE_FILES:
-                        change_file_extension(source_file_path, "mp3f")
-                        print("MP3 file has been changed")
+                    check_and_rename(source_file_path, "mp3f")
                     break
                 elif user_input == '2':
                     print("Skipping this song...")
@@ -332,19 +348,28 @@ def fetch_flac(source_file_path, flac_folder_path):
                 break
 
         else:
-            similarity_ratio = fuzz.token_set_ratio(name_local, name_json)
-            print("Similarity:", similarity_ratio)
+            if is_similar(name_local, name_json):
+                perform_download(track_id, flac_folder_path, filename)                
+                check_and_rename(source_file_path, "mp3f")
+            else:
+                print("Songs do not match")
 
-            if similarity_ratio >= SIMILARITY_VALUE:
-                print("FLAC is being downloaded")
-                download_file_with_progress_bar(track_id, flac_folder_path, filename)
-                if RENAME_SOURCE_FILES:
-                    change_file_extension(source_file_path, "mp3f")
-                    print("MP3 file has been changed")
-                break
+def is_similar(string1: str, string2: str) -> bool:
+    similarity_ratio = fuzz.token_set_ratio(string1, string2)
+    print("Similarity:", similarity_ratio)
 
-            print("Songs do not match")
+    if similarity_ratio >= SIMILARITY_VALUE:
+        return True
+    return False
 
+def check_and_rename(filepath: str, ext: str) -> None:
+    if RENAME_SOURCE_FILES:
+        change_file_extension(filepath, ext)
+        print("Source file has been renamed")
+
+def perform_download(track_id: int, flac_folder_path: str, filename: str) -> None:
+    print("FLAC is being downloaded")
+    download_file_with_progress_bar(track_id, flac_folder_path, filename)
 
 def main():
     for filename in os.listdir(SOURCE_FOLDER):
