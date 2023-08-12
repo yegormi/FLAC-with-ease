@@ -32,7 +32,7 @@ $ git clone https://github.com/yegormi/FLAC-with-ease
 This will clone the latest version of the repository to a **FLAC-with-ease** folder.
 
 ### Downloading The Repository Zip File
-Another way to use the MEAN.JS boilerplate is to download a zip copy from the [master branch on GitHub](https://github.com/yegormi/FLAC-with-ease/archive/refs/heads/main.zip). You can also do this using the `wget` command:
+Another way to use it is to download a zip copy from the [master branch on GitHub](https://github.com/yegormi/FLAC-with-ease/archive/refs/heads/main.zip). You can also do this using the `wget` command:
 
 ## Running Your Application
 
