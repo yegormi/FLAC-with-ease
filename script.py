@@ -41,7 +41,6 @@ SOURCE_FOLDER       = "/Users/yegormyropoltsev/Desktop/mp3"
 FLAC_FOLDER         = "/Users/yegormyropoltsev/Desktop/flac"
 
 
-
 def check_and_remove_after_keyword(input_string: str) -> str:
     """
     Check if any of the KEYWORDS_TO_DELETE_AFTER is present in the input_string.
@@ -72,7 +71,7 @@ def has_cyrillic(text: str) -> bool:
     """
     return bool(re.search('[а-яА-Я]', text))
 
-def change_file_extension(file_path: str, new_extension: str) -> None:
+def rename_file(file_path: str, new_extension: str) -> None:
     """
     Change the file extension of a given file path.
 
@@ -168,7 +167,7 @@ def parse_year(text):
     match = re.search(r'\b\d{4}\b', text)
     return match.group() if match else ""
 
-def get_url(track_id: int) -> str:
+def generate_url(track_id: int) -> str:
     """
     Generates a URL for downloading a track based on the given track ID.
 
@@ -196,7 +195,7 @@ def download(track_id: int) -> requests.Response:
         print("Sent request to download id=" + str(track_id))
 
     try:
-        url = get_url(track_id)
+        url = generate_url(track_id)
         response = requests.get(url, stream=True, verify=False)
 
         if DEBUG:
@@ -220,7 +219,7 @@ def download_file_with_progress_bar(track_id: str, destination: str, filename: s
         filename (str): The name of the downloaded file.
     """
     # Get the URL for the track
-    url = get_url(track_id)
+    url = generate_url(track_id)
     
     # Send a GET request to the URL and stream the response
     with requests.get(url, stream=True, verify=False) as response:
@@ -300,85 +299,90 @@ def fetch_flac(source_file_path, flac_folder_path):
         print("Could not find", name_local)
         return
     
-    for data in list_of_songs:
+    for song in list_of_songs:
         if is_found:
-            is_found = False
-            continue
+            break
 
-        artist   = parse_json(parse_json(data, "performer"), "name")
-        title    = parse_json(data, "title")
-        track_id = parse_json(data, "id")
-        filename = generate_filename(data)
+        artist   = parse_json(parse_json(song, "performer"), "name")
+        title    = parse_json(song, "title")
+        track_id = parse_json(song, "id")
+        filename = generate_filename(song)
         print("    Found:", filename)
 
-        is_containing = is_word_present(title, EXCLUDE_ITEMS)
-        if is_containing:
-            print("An exception! Heading to the next one...")
-            continue
-        
         name_json = f"{artist} - {title}"
 
-        if os.path.exists(os.path.join(flac_folder_path, filename)):
-            print("File already exists. Skipping...")
-            check_and_rename(source_file_path, "mp3f")
+        check_for_exceptions(title)
+        check_for_existence(source_file_path, flac_folder_path, filename)
 
-        if (has_cyrillic(name_local) or has_cyrillic(name_json)) and not is_found:
-            while True:
-                print("Does this song match your request?")
-                print("1. YES")
-                print("2. NO")
-                print("3. EXIT")
-                user_input = input()
-                if user_input == '1':
-                    is_found = True
-                    print("FLAC is being downloaded")
-                    download_file_with_progress_bar(track_id, flac_folder_path, filename)
-                    check_and_rename(source_file_path, "mp3f")
-                    break
-                elif user_input == '2':
-                    print("Skipping this song...")
-                    break
-                elif user_input == '3':
-                    print("EXITING")
-                    should_exit_for_loop = True
-                    break
-                else:
-                    print("Invalid input. Please enter '1' or '2'.")
-            if should_exit_for_loop:
-                break
-
+        if (has_cyrillic(name_local) or has_cyrillic(name_json)):
+            if is_song_right():
+                is_found = True
+                perform_download(track_id, flac_folder_path, filename)                
+                check_and_rename(source_file_path, "mp3f")
+            else:
+                print("Skipping this song\n")
+                continue
         else:
             if is_similar(name_local, name_json):
                 perform_download(track_id, flac_folder_path, filename)                
                 check_and_rename(source_file_path, "mp3f")
             else:
-                print("Songs do not match")
+                print("Songs do not match\n")
+
+def check_for_existence(source_file_path, flac_folder_path, flac_filename):
+    flac_file_path = os.path.join(flac_folder_path, flac_filename)
+    if os.path.exists(flac_file_path):
+        print("File already exists. Skipping...\n")
+        check_and_rename(source_file_path, "mp3f")
+
+def check_for_exceptions(title):
+    is_exception = is_word_present(title, EXCLUDE_ITEMS)
+    if is_exception:
+        print("An exception! Heading to the next one...\n")
+        return True
+    return False
+
+def is_song_right():
+    while True:
+        print("Does this song match your request?")
+        print("    1. Download")
+        print("    2. Skip")
+        user_input = input("Enter your choice: ")
+        if user_input == '1':
+            return True
+        elif user_input == '2':
+            return False
+        else:
+            print("Invalid input. Please enter '1' or '2'.")
+
 
 def is_similar(string1: str, string2: str) -> bool:
     similarity_ratio = fuzz.token_set_ratio(string1, string2)
     print("Similarity:", similarity_ratio)
-
-    if similarity_ratio >= SIMILARITY_VALUE:
-        return True
-    return False
+    return similarity_ratio >= SIMILARITY_VALUE
 
 def check_and_rename(filepath: str, ext: str) -> None:
     if RENAME_SOURCE_FILES:
-        change_file_extension(filepath, ext)
+        rename_file(filepath, ext)
         print("Source file has been renamed")
 
-def perform_download(track_id: int, flac_folder_path: str, filename: str) -> None:
+def perform_download(track_id: int, folder_path: str, filename: str) -> None:
     print("FLAC is being downloaded")
-    download_file_with_progress_bar(track_id, flac_folder_path, filename)
+    download_file_with_progress_bar(track_id, folder_path, filename)
 
 def main():
-    for filename in os.listdir(SOURCE_FOLDER):
+    source_files = os.listdir(SOURCE_FOLDER)
+    
+    for filename in source_files:
         if filename.endswith("." + SOURCE_EXTENSION):
             mp3_filepath = os.path.join(SOURCE_FOLDER, filename)
+
             try:
                 fetch_flac(mp3_filepath, FLAC_FOLDER)
             except Exception as e:
-                print(f"An error occurred while processing {mp3_filepath}: {str(e)}")
+                error_message = f"An error occurred while processing {mp3_filepath}: {str(e)}"
+                print(error_message)
 
+                
 if __name__ == "__main__":
     main()
