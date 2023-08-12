@@ -288,7 +288,7 @@ def fetch_flac(source_file_path, flac_folder_path):
 
         isContains = check_words_in_string(title, EXCLUDE_ITEMS)
         if isContains:
-            print("Found an exception! Heading to the next one...")
+            print("An exception! Heading to the next one...")
             continue
         
         name_json = f"{artist} - {title}"
