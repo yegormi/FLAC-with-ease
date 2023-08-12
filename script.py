@@ -285,6 +285,11 @@ def generate_filename(data):
     
     return filename
 
+def does_file_exist(flac_folder_path, flac_filename):
+    flac_file_path = os.path.join(flac_folder_path, flac_filename)
+    if os.path.exists(flac_file_path):
+        return True
+    return False
 
 def check_for_existence(source_file_path, flac_folder_path, flac_filename):
     flac_file_path = os.path.join(flac_folder_path, flac_filename)
@@ -292,7 +297,7 @@ def check_for_existence(source_file_path, flac_folder_path, flac_filename):
         print("File already exists. Skipping...\n")
         check_and_rename(source_file_path, "mp3f")
 
-def check_for_exceptions(title):
+def is_exception(title):
     """
     Check for any exceptions in the given title.
     
@@ -302,9 +307,8 @@ def check_for_exceptions(title):
     Returns:
         bool: True if an exception is found, False otherwise.
     """
-    is_exception = is_word_present(title, EXCLUDE_ITEMS)
-    if is_exception:
-        print("An exception! Heading to the next one...\n")
+    is_present = is_word_present(title, EXCLUDE_ITEMS)
+    if is_present:
         return True
     return False
 
@@ -361,7 +365,7 @@ def perform_download(track_id: int, folder_path: str, filename: str) -> None:
 
 
 def fetch_flac(source_file_path: str, flac_folder_path: str) -> None:
-    is_found = False
+    found = False
     artist_local, title_local = get_artist_and_title(source_file_path)
     list_of_songs = get_json(artist_local, title_local)
     name_local = f"{artist_local} - {title_local}"
@@ -371,7 +375,7 @@ def fetch_flac(source_file_path: str, flac_folder_path: str) -> None:
         return
     
     for song in list_of_songs:
-        if is_found:
+        if found:
             break
 
         artist   = parse_json(parse_json(song, "performer"), "name")
@@ -382,13 +386,19 @@ def fetch_flac(source_file_path: str, flac_folder_path: str) -> None:
         print("    Found:", filename)
         name_json = f"{artist} - {title}"
 
-        check_for_exceptions(title)
-        check_for_existence(source_file_path, flac_folder_path, filename)
+        if is_exception(title):
+            print("An exception! Heading to the next one...\n")
+            continue
+
+        if does_file_exist(flac_folder_path, filename):
+            print("File already exists. Skipping...\n")
+            check_and_rename(source_file_path, "mp3f")
+            continue
 
         song_action = song_handling()
-        if (has_cyrillic(name_local) or has_cyrillic(name_json) and not is_found):
+        if (has_cyrillic(name_local) or has_cyrillic(name_json) and not found):
             if song_action == Action.download:
-                is_found = True
+                found = True
                 perform_download(track_id, flac_folder_path, filename)                
                 check_and_rename(source_file_path, "mp3f")
                 break
