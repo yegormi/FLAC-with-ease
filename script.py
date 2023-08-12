@@ -47,50 +47,6 @@ RENAME_SOURCE_FILES = True
 SOURCE_FOLDER       = "/Users/yegormyropoltsev/Desktop/mp3"
 FLAC_FOLDER         = "/Users/yegormyropoltsev/Desktop/flac"
 
-
-def remove_content_after_keyword(input_string: str) -> str:
-    """
-    Removes any content after a keyword in the input_string.
-
-    Args:
-        input_string (str): The string to check for keywords.
-
-    Returns:
-        str: The input_string with any content after the keyword removed.
-    """
-    for keyword in KEYWORDS_TO_DELETE_AFTER:
-        if keyword in input_string:
-            input_string = input_string.split(keyword)[0]
-            break
-    return input_string
-
-def has_cyrillic(text: str) -> bool:
-    """
-    Check if the given text contains Cyrillic characters.
-
-    Args:
-        text (str): The text to be checked.
-
-    Returns:
-        bool: True if the text contains Cyrillic characters, False otherwise.
-    """
-    return bool(re.search('[а-яА-Я]', text))
-
-def rename_file(file_path: str, new_extension: str) -> None:
-    """
-    Change the file extension of a given file path.
-
-    Args:
-        file_path (str): The path of the file to be modified.
-        new_extension (str): The new extension to be applied to the file.
-
-    Returns:
-        None
-    """
-    base_path = os.path.splitext(file_path)[0]
-    new_file_path = f"{base_path}.{new_extension}"
-    os.rename(file_path, new_file_path)
-
 def get_artist_and_title(source_file: str) -> Tuple[str, str]:
     """
     Extracts the artist and title information from an MP3 file.
@@ -118,6 +74,8 @@ def get_artist_and_title(source_file: str) -> Tuple[str, str]:
         return artist, title
     
     return None, None
+
+
 
 def get_json(artist: str, title: str) -> List[dict]:
     """
@@ -157,18 +115,33 @@ def parse_json(data: dict, key: str) -> str:
         print(f"Parsed {key} \"{data[key]}\"")
     return data[key]
 
-def parse_year(text: str) -> str:
+def generate_filename(data: dict) -> str:
     """
-    Parse the year from the given text.
+    Generate a filename for a FLAC audio file based on the given data.
 
     Parameters:
-        text (str): The text to search for a year.
+        data (dict): The data used to generate the filename. It should contain the following keys:
+            - 'performer' (str): The name of the artist.
+            - 'title' (str): The title of the audio file.
+            - 'maximum_bit_depth' (int): The maximum bit depth of the audio file.
+            - 'maximum_sampling_rate' (float): The maximum sampling rate of the audio file.
+            - 'copyright' (str): The copyright information.
 
     Returns:
-        str: The parsed year as an integer if found, or an empty string if not found.
+        str: The generated filename for the FLAC audio file.
     """
-    match = re.search(r'\b\d{4}\b', text)
-    return match.group() if match else ""
+    artist        = parse_json(parse_json(data, "performer"), "name")
+    title         = parse_json(data, "title")
+    bit_depth     = parse_json(data, "maximum_bit_depth")
+    sampling_rate = parse_json(data, "maximum_sampling_rate")
+    copyright     = parse_json(data, "copyright")
+    year          = parse_year(copyright)
+    filename      = f"{artist} - {title} ({year}) [FLAC] [{bit_depth}B - {sampling_rate}kHz].flac"
+    filename      = filename.replace("/", "-")
+    
+    return filename
+
+
 
 def generate_url(track_id: int) -> str:
     """
@@ -240,6 +213,49 @@ def download_file_with_progress_bar(track_id: str, destination: str, filename: s
                 # Print a newline character to separate the progress bar from other output
                 print("\n")
 
+
+
+def remove_content_after_keyword(input_string: str) -> str:
+    """
+    Removes any content after a keyword in the input_string.
+
+    Args:
+        input_string (str): The string to check for keywords.
+
+    Returns:
+        str: The input_string with any content after the keyword removed.
+    """
+    for keyword in KEYWORDS_TO_DELETE_AFTER:
+        if keyword in input_string:
+            input_string = input_string.split(keyword)[0]
+            break
+    return input_string
+
+def has_cyrillic(input_string: str) -> bool:
+    """
+    Check if the given text contains Cyrillic characters.
+
+    Args:
+        input_string (str): The text to be checked.
+
+    Returns:
+        bool: True if the text contains Cyrillic characters, False otherwise.
+    """
+    return bool(re.search('[а-яА-Я]', input_string))
+
+def parse_year(input_string: str) -> str:
+    """
+    Parse the year from the given text.
+
+    Parameters:
+        text (str): The text to search for a year.
+
+    Returns:
+        str: The parsed year as an integer if found, or an empty string if not found.
+    """
+    match = re.search(r'\b\d{4}\b', input_string)
+    return match.group() if match else ""
+
 def is_word_present(input_string: str, word_dict: List[str]) -> bool:
     """
     Check if any word from the word dictionary is present in the input string.
@@ -253,31 +269,50 @@ def is_word_present(input_string: str, word_dict: List[str]) -> bool:
     """
     return any(word in input_string for word in word_dict)
 
-def generate_filename(data: dict) -> str:
+def is_exception(input_string: str) -> bool:
     """
-    Generate a filename for a FLAC audio file based on the given data.
-
+    Check for any exceptions in the given title.
+    
     Parameters:
-        data (dict): The data used to generate the filename. It should contain the following keys:
-            - 'performer' (str): The name of the artist.
-            - 'title' (str): The title of the audio file.
-            - 'maximum_bit_depth' (int): The maximum bit depth of the audio file.
-            - 'maximum_sampling_rate' (float): The maximum sampling rate of the audio file.
-            - 'copyright' (str): The copyright information.
+        title (str): The title to check for exceptions.
+        
+    Returns:
+        bool: True if an exception is found, False otherwise.
+    """
+    is_present = is_word_present(input_string, EXCLUDE_ITEMS)
+    return is_present
+
+def is_similar(string1: str, string2: str) -> bool:
+    """
+    Check if two strings are similar based on their token set ratio.
+    
+    Parameters:
+        string1 (str): The first string to compare.
+        string2 (str): The second string to compare.
+        
+    Returns:
+        bool: True if the similarity ratio is greater than or equal to SIMILARITY_VALUE, False otherwise.
+    """
+    similarity_ratio = fuzz.token_set_ratio(string1, string2)
+    print("Similarity:", similarity_ratio)
+    return similarity_ratio >= SIMILARITY_VALUE
+
+
+
+def rename_file(file_path: str, new_extension: str) -> None:
+    """
+    Change the file extension of a given file path.
+
+    Args:
+        file_path (str): The path of the file to be modified.
+        new_extension (str): The new extension to be applied to the file.
 
     Returns:
-        str: The generated filename for the FLAC audio file.
+        None
     """
-    artist        = parse_json(parse_json(data, "performer"), "name")
-    title         = parse_json(data, "title")
-    bit_depth     = parse_json(data, "maximum_bit_depth")
-    sampling_rate = parse_json(data, "maximum_sampling_rate")
-    copyright     = parse_json(data, "copyright")
-    year          = parse_year(copyright)
-    filename      = f"{artist} - {title} ({year}) [FLAC] [{bit_depth}B - {sampling_rate}kHz].flac"
-    filename      = filename.replace("/", "-")
-    
-    return filename
+    base_path = os.path.splitext(file_path)[0]
+    new_file_path = f"{base_path}.{new_extension}"
+    os.rename(file_path, new_file_path)
 
 def does_file_exist(flac_folder_path: str, flac_filename: str) -> bool:
     """
@@ -295,20 +330,16 @@ def does_file_exist(flac_folder_path: str, flac_filename: str) -> bool:
         return True
     return False
 
-def is_exception(title: str) -> bool:
-    """
-    Check for any exceptions in the given title.
-    
-    Parameters:
-        title (str): The title to check for exceptions.
-        
-    Returns:
-        bool: True if an exception is found, False otherwise.
-    """
-    is_present = is_word_present(title, EXCLUDE_ITEMS)
-    if is_present:
-        return True
-    return False
+def check_and_rename(filepath: str, ext: str) -> None:
+    if RENAME_SOURCE_FILES:
+        rename_file(filepath, ext)
+        print("Source file has been renamed")
+
+def perform_download(track_id: int, folder_path: str, filename: str) -> None:
+    print("FLAC is being downloaded")
+    download_file_with_progress_bar(track_id, folder_path, filename)
+
+
 
 def song_handling() -> Action:
     """
@@ -335,30 +366,6 @@ def song_handling() -> Action:
             return Action.exit
         else:
             print("Invalid input. Please enter '1' or '2' or '3'.")
-
-def is_similar(string1: str, string2: str) -> bool:
-    """
-    Check if two strings are similar based on their token set ratio.
-    
-    Parameters:
-        string1 (str): The first string to compare.
-        string2 (str): The second string to compare.
-        
-    Returns:
-        bool: True if the similarity ratio is greater than or equal to SIMILARITY_VALUE, False otherwise.
-    """
-    similarity_ratio = fuzz.token_set_ratio(string1, string2)
-    print("Similarity:", similarity_ratio)
-    return similarity_ratio >= SIMILARITY_VALUE
-
-def check_and_rename(filepath: str, ext: str) -> None:
-    if RENAME_SOURCE_FILES:
-        rename_file(filepath, ext)
-        print("Source file has been renamed")
-
-def perform_download(track_id: int, folder_path: str, filename: str) -> None:
-    print("FLAC is being downloaded")
-    download_file_with_progress_bar(track_id, folder_path, filename)
 
 def fetch_flac(source_file_path: str, flac_folder_path: str) -> None:
     found = False
