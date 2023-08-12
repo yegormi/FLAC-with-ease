@@ -102,18 +102,18 @@ def get_artist_and_title(source_file: str) -> Tuple[str, str]:
         tuple: A tuple containing the artist and title extracted from the MP3 file. If the MP3 file does not have tag information, returns (None, None).
     """
     audiofile = eyed3.load(source_file)
-    
+
     if audiofile.tag:
+        artist = audiofile.tag.artist
+        title = audiofile.tag.title
+        
         if DEBUG:
-            print(f"\nExtracted: {audiofile.tag.artist} - {audiofile.tag.title}")
+            print(f"\nExtracted: {artist} - {title}")
         
         if LOOK_FOR_ORIGINAL:
-            artist = remove_content_after_keyword(audiofile.tag.artist)
-            title = remove_content_after_keyword(audiofile.tag.title)
+            artist = remove_content_after_keyword(artist)
+            title = remove_content_after_keyword(title)
             print(f"  Cleaned: {artist} - {title}")
-        else:
-            artist = audiofile.tag.artist
-            title = audiofile.tag.title
         
         return artist, title
     
