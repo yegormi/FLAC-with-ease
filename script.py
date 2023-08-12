@@ -24,21 +24,17 @@ BASIC PROCESS:
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 eyed3.log.setLevel("ERROR")
 
-'''
-DO NOT CHANGE IT! CONSTANTS
-'''
+# DO NOT CHANGE IT! CONSTANTS
 SIMILARITY_VALUE = 90
 SOURCE_EXTENSION = "mp3"
 SEARCH_URL       = "https://slavart.gamesdrive.net/api/search"
 DOWNLOAD_URL     = "https://slavart-api.gamesdrive.net/api/download/track"
 EXCLUDE_ITEMS    = ["Instrumental", "Karaoke"]
-KEYWORDS_TO_DELETE_AFTER = ["feat", ",", "&", "("]
-'''
-DO NOT CHANGE IT! CONSTANTS
-'''
+KEYWORDS_TO_DELETE_AFTER = ["feat", "(", ",", "&"]
+# DO NOT CHANGE IT! CONSTANTS
 
 DEBUG               = True
-DEBUG_COMPLEX       = True
+DEBUG_COMPLEX       = False
 LOOK_FOR_ORIGINAL   = True
 RENAME_SOURCE_FILES = True
 SOURCE_FOLDER       = "/Users/yegormyropoltsev/Desktop/mp3"
