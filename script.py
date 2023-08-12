@@ -28,6 +28,7 @@ eyed3.log.setLevel("ERROR")
 DO NOT CHANGE IT! CONSTANTS
 '''
 SIMILARITY_VALUE = 90
+SOURCE_EXTENSION = "mp3"
 SEARCH_URL       = "https://slavart.gamesdrive.net/api/search"
 DOWNLOAD_URL     = "https://slavart-api.gamesdrive.net/api/download/track"
 EXCLUDE_ITEMS    = ["Instrumental", "Karaoke"]
@@ -42,7 +43,6 @@ LOOK_FOR_ORIGINAL   = True
 RENAME_SOURCE_FILES = True
 SOURCE_FOLDER       = "/Users/yegormyropoltsev/Desktop/mp3"
 FLAC_FOLDER         = "/Users/yegormyropoltsev/Desktop/flac"
-SOURCE_EXTENSION    = "m4a"
 
 
 
@@ -76,7 +76,7 @@ def has_cyrillic(text: str) -> bool:
     """
     return bool(re.search('[а-яА-Я]', text))
 
-def change_SOURCE_EXTENSION(file_path: str, new_extension: str) -> None:
+def change_file_extension(file_path: str, new_extension: str) -> None:
     """
     Change the file extension of a given file path.
 
@@ -306,7 +306,7 @@ def fetch_flac(source_file_path, flac_folder_path):
         if os.path.exists(os.path.join(flac_folder_path, filename)):
             print("File already exists. Skipping...")
             if RENAME_SOURCE_FILES:
-                change_SOURCE_EXTENSION(source_file_path, "mp3f")
+                change_file_extension(source_file_path, "mp3f")
                 print("MP3 file has been changed")
             break
 
@@ -321,7 +321,7 @@ def fetch_flac(source_file_path, flac_folder_path):
                     is_found = True
                     download_file_bar(track_id, flac_folder_path, filename)
                     if RENAME_SOURCE_FILES:
-                        change_SOURCE_EXTENSION(source_file_path, "mp3f")
+                        change_file_extension(source_file_path, "mp3f")
                         print("MP3 file has been changed")
                     break
                 elif user_input == '2':
@@ -338,7 +338,7 @@ def fetch_flac(source_file_path, flac_folder_path):
                 print("FLAC is being downloaded")
                 download_file_bar(track_id, flac_folder_path, filename)
                 if RENAME_SOURCE_FILES:
-                    change_SOURCE_EXTENSION(source_file_path, "mp3f")
+                    change_file_extension(source_file_path, "mp3f")
                     print("MP3 file has been changed")
                 break
 
@@ -347,7 +347,7 @@ def fetch_flac(source_file_path, flac_folder_path):
 
 def main():
     for filename in os.listdir(SOURCE_FOLDER):
-        if filename.endswith(".mp3"):
+        if filename.endswith("." + SOURCE_EXTENSION):
             mp3_filepath = os.path.join(SOURCE_FOLDER, filename)
             try:
                 fetch_flac(mp3_filepath, FLAC_FOLDER)
