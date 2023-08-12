@@ -1,14 +1,21 @@
-import json     # JSON Management
-import os       # For renaming and placing files
-import re       # RegEx - extracting year from given string
-import shutil   # For downloading file
+import json    # JSON Management
+import os      # For renaming and placing files
+import re      # RegEx - extracting year from given string
+import shutil  # For downloading file
+from enum import Enum           # Create a custom enum
 from typing import List, Tuple  # Type hints
 
-import eyed3    # For reading ID3 tags from mp3 files
-import requests # For making an HTTP request
-import urllib3  # To supress unsecure HTTP requests
-from fuzzywuzzy import fuzz
-from tqdm.auto  import tqdm
+import eyed3     # For reading ID3 tags from mp3 files
+import requests  # For making an HTTP request
+import urllib3   # To supress unsecure HTTP requests
+from fuzzywuzzy import fuzz  # For fuzzy matching
+from tqdm.auto import tqdm   # For progress bar
+
+
+class Action(Enum):
+    download = 1
+    skip = 2
+    exit = 3
 
 '''
 BASIC PROCESS:
@@ -279,6 +286,51 @@ def generate_filename(data):
     return filename
 
 
+def check_for_existence(source_file_path, flac_folder_path, flac_filename):
+    flac_file_path = os.path.join(flac_folder_path, flac_filename)
+    if os.path.exists(flac_file_path):
+        print("File already exists. Skipping...\n")
+        check_and_rename(source_file_path, "mp3f")
+
+def check_for_exceptions(title):
+    is_exception = is_word_present(title, EXCLUDE_ITEMS)
+    if is_exception:
+        print("An exception! Heading to the next one...\n")
+        return True
+    return False
+
+def song_handling():
+    while True:
+        print("Does this song match your request?")
+        print("    1. Download")
+        print("    2. Skip")
+        print("    3. Exit")
+        user_input = str(input("Enter your choice: "))
+        if user_input == '1':
+            return Action.download
+        elif user_input == '2':
+            return Action.skip
+        elif user_input == '3':
+            return Action.exit
+        else:
+            print("Invalid input. Please enter '1' or '2'.")
+
+
+def is_similar(string1: str, string2: str) -> bool:
+    similarity_ratio = fuzz.token_set_ratio(string1, string2)
+    print("Similarity:", similarity_ratio)
+    return similarity_ratio >= SIMILARITY_VALUE
+
+def check_and_rename(filepath: str, ext: str) -> None:
+    if RENAME_SOURCE_FILES:
+        rename_file(filepath, ext)
+        print("Source file has been renamed")
+
+def perform_download(track_id: int, folder_path: str, filename: str) -> None:
+    print("FLAC is being downloaded")
+    download_file_with_progress_bar(track_id, folder_path, filename)
+
+
 def fetch_flac(source_file_path, flac_folder_path):
     """
     Fetches FLAC files based on the provided MP3 path and saves them in the FLAC folder.
@@ -307,68 +359,35 @@ def fetch_flac(source_file_path, flac_folder_path):
         title    = parse_json(song, "title")
         track_id = parse_json(song, "id")
         filename = generate_filename(song)
-        print("    Found:", filename)
 
+        print("    Found:", filename)
         name_json = f"{artist} - {title}"
 
         check_for_exceptions(title)
         check_for_existence(source_file_path, flac_folder_path, filename)
-
-        if (has_cyrillic(name_local) or has_cyrillic(name_json)):
-            if is_song_right():
+        
+        song_action = song_handling()
+        if (has_cyrillic(name_local) or has_cyrillic(name_json) and not is_found):
+            if song_action == Action.download:
                 is_found = True
                 perform_download(track_id, flac_folder_path, filename)                
                 check_and_rename(source_file_path, "mp3f")
-            else:
+                break
+            elif song_action == Action.skip:
                 print("Skipping this song\n")
                 continue
-        else:
-            if is_similar(name_local, name_json):
-                perform_download(track_id, flac_folder_path, filename)                
-                check_and_rename(source_file_path, "mp3f")
+            elif song_action == Action.exit:
+                print("Exited successfully")
+                break
             else:
-                print("Songs do not match\n")
+                raise ValueError("Unknown error occurred") 
 
-def check_for_existence(source_file_path, flac_folder_path, flac_filename):
-    flac_file_path = os.path.join(flac_folder_path, flac_filename)
-    if os.path.exists(flac_file_path):
-        print("File already exists. Skipping...\n")
-        check_and_rename(source_file_path, "mp3f")
-
-def check_for_exceptions(title):
-    is_exception = is_word_present(title, EXCLUDE_ITEMS)
-    if is_exception:
-        print("An exception! Heading to the next one...\n")
-        return True
-    return False
-
-def is_song_right():
-    while True:
-        print("Does this song match your request?")
-        print("    1. Download")
-        print("    2. Skip")
-        user_input = input("Enter your choice: ")
-        if user_input == '1':
-            return True
-        elif user_input == '2':
-            return False
+        if is_similar(name_local, name_json):
+            perform_download(track_id, flac_folder_path, filename)                
+            check_and_rename(source_file_path, "mp3f")
         else:
-            print("Invalid input. Please enter '1' or '2'.")
+            print("Songs do not match\n")
 
-
-def is_similar(string1: str, string2: str) -> bool:
-    similarity_ratio = fuzz.token_set_ratio(string1, string2)
-    print("Similarity:", similarity_ratio)
-    return similarity_ratio >= SIMILARITY_VALUE
-
-def check_and_rename(filepath: str, ext: str) -> None:
-    if RENAME_SOURCE_FILES:
-        rename_file(filepath, ext)
-        print("Source file has been renamed")
-
-def perform_download(track_id: int, folder_path: str, filename: str) -> None:
-    print("FLAC is being downloaded")
-    download_file_with_progress_bar(track_id, folder_path, filename)
 
 def main():
     source_files = os.listdir(SOURCE_FOLDER)
