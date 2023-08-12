@@ -48,22 +48,20 @@ SOURCE_FOLDER       = "/Users/yegormyropoltsev/Desktop/mp3"
 FLAC_FOLDER         = "/Users/yegormyropoltsev/Desktop/flac"
 
 
-def check_and_remove_after_keyword(input_string: str) -> str:
+def remove_content_after_keyword(input_string: str) -> str:
     """
-    Check if any of the KEYWORDS_TO_DELETE_AFTER is present in the input_string.
-    If a keyword is found, split the input_string at the keyword and return the first part.
-    If no keyword is found, return the original input_string.
-    
+    Removes any content after a keyword in the input_string.
+
     Args:
         input_string (str): The string to check for keywords.
-        
+
     Returns:
-        str: The input_string with any content after the keyword removed, or the original input_string.
+        str: The input_string with any content after the keyword removed.
     """
     for keyword in KEYWORDS_TO_DELETE_AFTER:
         if keyword in input_string:
-            result_string = input_string.split(keyword)[0]
-            return result_string
+            input_string = input_string.split(keyword)[0]
+            break
     return input_string
 
 def has_cyrillic(text: str) -> bool:
@@ -110,8 +108,8 @@ def get_artist_and_title(source_file: str) -> Tuple[str, str]:
             print(f"\nExtracted: {audiofile.tag.artist} - {audiofile.tag.title}")
         
         if LOOK_FOR_ORIGINAL:
-            artist = check_and_remove_after_keyword(audiofile.tag.artist)
-            title = check_and_remove_after_keyword(audiofile.tag.title)
+            artist = remove_content_after_keyword(audiofile.tag.artist)
+            title = remove_content_after_keyword(audiofile.tag.title)
             print(f"  Cleaned: {artist} - {title}")
         else:
             artist = audiofile.tag.artist
@@ -144,7 +142,7 @@ def get_json(artist: str, title: str) -> List[dict]:
         print("Error parsing JSON response:", e)
         return None
 
-def parse_json(data: dict, key: str):
+def parse_json(data: dict, key: str) -> str:
     """
     Parses the specified JSON object and returns the value of the specified key.
 
@@ -159,7 +157,7 @@ def parse_json(data: dict, key: str):
         print(f"Parsed {key} \"{data[key]}\"")
     return data[key]
 
-def parse_year(text):
+def parse_year(text: str) -> str:
     """
     Parse the year from the given text.
 
@@ -255,7 +253,7 @@ def is_word_present(input_string: str, word_dict: List[str]) -> bool:
     """
     return any(word in input_string for word in word_dict)
 
-def generate_filename(data):
+def generate_filename(data: dict) -> str:
     """
     Generate a filename for a FLAC audio file based on the given data.
 
@@ -281,7 +279,7 @@ def generate_filename(data):
     
     return filename
 
-def does_file_exist(flac_folder_path, flac_filename):
+def does_file_exist(flac_folder_path: str, flac_filename: str) -> bool:
     """
     Check if a file exists in a given folder path.
 
@@ -297,7 +295,7 @@ def does_file_exist(flac_folder_path, flac_filename):
         return True
     return False
 
-def is_exception(title):
+def is_exception(title: str) -> bool:
     """
     Check for any exceptions in the given title.
     
@@ -312,7 +310,7 @@ def is_exception(title):
         return True
     return False
 
-def song_handling():
+def song_handling() -> Action:
     """
     Handles the user interaction for song handling.
     
