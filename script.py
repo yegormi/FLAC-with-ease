@@ -181,8 +181,6 @@ def get_url(track_id: int) -> str:
     url = f"{DOWNLOAD_URL}?id={track_id}"
     return url
 
-import requests
-
 
 def download(track_id: int) -> requests.Response:
     """
