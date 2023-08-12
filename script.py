@@ -311,7 +311,8 @@ def fetch_flac(source_file_path, flac_folder_path):
                 print("Does this song match your request?")
                 print("1. YES")
                 print("2. NO")
-                user_input = str(input())
+                print("3. EXIT")
+                user_input = input()
                 if user_input == '1':
                     print("FLAC is being downloaded")
                     is_found = True
@@ -323,8 +324,14 @@ def fetch_flac(source_file_path, flac_folder_path):
                 elif user_input == '2':
                     print("Skipping this song...")
                     break
+                elif user_input == '3':
+                    print("EXITING")
+                    should_exit_for_loop = True
+                    break
                 else:
                     print("Invalid input. Please enter '1' or '2'.")
+            if should_exit_for_loop:
+                break
 
         else:
             similarity_ratio = fuzz.token_set_ratio(name_local, name_json)
