@@ -93,17 +93,17 @@ def rename_file(file_path: str, new_extension: str) -> None:
     new_file_path = f"{base_path}.{new_extension}"
     os.rename(file_path, new_file_path)
 
-def get_artist_and_title(SOURCE_FOLDER_file: str) -> Tuple[str, str]:
+def get_artist_and_title(source_file: str) -> Tuple[str, str]:
     """
     Extracts the artist and title information from an MP3 file.
 
     Args:
-        SOURCE_FOLDER_file (str): The path to the MP3 file.
+        source_file (str): The path to the MP3 file.
 
     Returns:
         tuple: A tuple containing the artist and title extracted from the MP3 file. If the MP3 file does not have tag information, returns (None, None).
     """
-    audiofile = eyed3.load(SOURCE_FOLDER_file)
+    audiofile = eyed3.load(source_file)
     
     if audiofile.tag:
         if DEBUG:
@@ -120,7 +120,6 @@ def get_artist_and_title(SOURCE_FOLDER_file: str) -> Tuple[str, str]:
         return artist, title
     
     return None, None
-
 
 def get_json(artist: str, title: str) -> List[dict]:
     """
@@ -144,7 +143,6 @@ def get_json(artist: str, title: str) -> List[dict]:
     except json.decoder.JSONDecodeError as e:
         print("Error parsing JSON response:", e)
         return None
-
 
 def parse_json(data: dict, key: str):
     """
@@ -187,7 +185,6 @@ def generate_url(track_id: int) -> str:
     url = f"{DOWNLOAD_URL}?id={track_id}"
     return url
 
-
 def download(track_id: int) -> requests.Response:
     """
     Downloads a track given its ID.
@@ -214,7 +211,6 @@ def download(track_id: int) -> requests.Response:
         # You can add additional error handling or logging here
 
     return None
-
 
 def download_file_with_progress_bar(track_id: str, destination: str, filename: str) -> None:
     """
@@ -342,7 +338,6 @@ def song_handling():
         else:
             print("Invalid input. Please enter '1' or '2' or '3'.")
 
-
 def is_similar(string1: str, string2: str) -> bool:
     """
     Check if two strings are similar based on their token set ratio.
@@ -366,7 +361,6 @@ def check_and_rename(filepath: str, ext: str) -> None:
 def perform_download(track_id: int, folder_path: str, filename: str) -> None:
     print("FLAC is being downloaded")
     download_file_with_progress_bar(track_id, folder_path, filename)
-
 
 def fetch_flac(source_file_path: str, flac_folder_path: str) -> None:
     found = False
@@ -421,7 +415,6 @@ def fetch_flac(source_file_path: str, flac_folder_path: str) -> None:
         else:
             print("Songs do not match\n")
 
-
 def main():
     source_files = os.listdir(SOURCE_FOLDER)
     
@@ -434,7 +427,6 @@ def main():
             except Exception as e:
                 error_message = f"An error occurred while processing {mp3_filepath}: {str(e)}"
                 print(error_message)
-
-                
+             
 if __name__ == "__main__":
     main()
