@@ -286,16 +286,20 @@ def generate_filename(data):
     return filename
 
 def does_file_exist(flac_folder_path, flac_filename):
+    """
+    Check if a file exists in a given folder path.
+
+    Args:
+        flac_folder_path (str): The path to the folder where the file should be located.
+        flac_filename (str): The name of the file to check.
+
+    Returns:
+        bool: True if the file exists, False otherwise.
+    """
     flac_file_path = os.path.join(flac_folder_path, flac_filename)
     if os.path.exists(flac_file_path):
         return True
     return False
-
-def check_for_existence(source_file_path, flac_folder_path, flac_filename):
-    flac_file_path = os.path.join(flac_folder_path, flac_filename)
-    if os.path.exists(flac_file_path):
-        print("File already exists. Skipping...\n")
-        check_and_rename(source_file_path, "mp3f")
 
 def is_exception(title):
     """
