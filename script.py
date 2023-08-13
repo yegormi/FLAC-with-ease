@@ -10,23 +10,6 @@ import eyed3     # For reading ID3 tags from mp3 files
 import requests  # For making an HTTP request
 import urllib3   # To supress unsecure HTTP requests
 
-
-class Action(Enum):
-    download = 1
-    skip = 2
-    exit = 3
-
-'''
-BASIC PROCESS:
-
-1. Reading metadata from MP3 files (artist, title)
-2. Making a JSON request using artist and title
-3. Extracting specific variable from JSON content
-4. Make a download request, if there is a response, download it
-4. Renaming downloaded file
-5. Moving downloaded file to destination folder
-'''
-
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 eyed3.log.setLevel("ERROR")
 
@@ -45,6 +28,25 @@ LOOK_FOR_ORIGINAL   = True
 RENAME_SOURCE_FILES = True
 SOURCE_FOLDER       = "/Users/yegormyropoltsev/Desktop/mp3"
 FLAC_FOLDER         = "/Users/yegormyropoltsev/Desktop/flac"
+
+'''
+BASIC PROCESS:
+
+1. Reading metadata from MP3 files (artist, title)
+2. Making a JSON request using artist and title
+3. Extracting specific variable from JSON content
+4. Make a download request, if there is a response, download it
+4. Renaming downloaded file
+5. Moving downloaded file to destination folder
+'''
+
+
+class Action(Enum):
+    download = 1
+    skip = 2
+    exit = 3
+
+
 
 def get_artist_and_title(source_file: str) -> Tuple[str, str]:
     """
