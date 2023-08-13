@@ -127,9 +127,13 @@ def parse_json(data: dict, key: str) -> str:
     Returns:
         The value of the specified key from the JSON object.
     """
-    if DEBUG_COMPLEX:
-        print(f"Parsed {key} \"{data[key]}\"")
-    return data[key]
+    value = data.get(key)
+    
+    if DEBUG_COMPLEX and value is not None:
+        print(f"Parsed {key} \"{value}\"")
+    
+    return value
+
 
 def generate_filename(data: dict) -> str:
     """
