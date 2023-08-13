@@ -1,15 +1,14 @@
-import json    # JSON Management
-import os      # For renaming and placing files
-import re      # RegEx - extracting year from given string
-import shutil  # For downloading file
+import json     # JSON Management
+import os       # For renaming and placing files
+import re       # RegEx - extracting year from given string
+import shutil   # For downloading file
 from enum import Enum           # Create a custom enum
 from typing import List, Tuple  # Type hints
-
+from tqdm.auto import tqdm      # For progress bar
+from fuzzywuzzy import fuzz     # For fuzzy matching
 import eyed3     # For reading ID3 tags from mp3 files
 import requests  # For making an HTTP request
 import urllib3   # To supress unsecure HTTP requests
-from fuzzywuzzy import fuzz  # For fuzzy matching
-from tqdm.auto import tqdm   # For progress bar
 
 
 class Action(Enum):
