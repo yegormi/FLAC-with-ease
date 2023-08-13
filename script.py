@@ -55,25 +55,32 @@ def get_artist_and_title(source_file: str) -> Tuple[str, str]:
         source_file (str): The path to the MP3 file.
 
     Returns:
-        tuple: A tuple containing the artist and title extracted from the MP3 file. If the MP3 file does not have tag information, returns (None, None).
+        tuple: A tuple containing the artist and title extracted from the MP3 file.
+               If the MP3 file does not have tag information, returns (None, None).
     """
-    audiofile = eyed3.load(source_file)
-
-    if audiofile.tag:
-        artist = audiofile.tag.artist
-        title = audiofile.tag.title
-        
-        if DEBUG:
-            print(f"\nExtracted: {artist} - {title}")
-        
-        if LOOK_FOR_ORIGINAL:
-            artist = remove_content_after_keyword(artist)
-            title = remove_content_after_keyword(title)
-            print(f"  Cleaned: {artist} - {title}")
-        
-        return artist, title
+    artist, title = None, None
     
-    return None, None
+    try:
+        audiofile = eyed3.load(source_file)
+        
+        if audiofile.tag:
+            artist = audiofile.tag.artist
+            title = audiofile.tag.title
+            
+            if DEBUG:
+                print(f"\nExtracted: {artist} - {title}")
+            
+            if LOOK_FOR_ORIGINAL:
+                artist = remove_content_after_keyword(artist)
+                title = remove_content_after_keyword(title)
+                if DEBUG:
+                    print(f"  Cleaned: {artist} - {title}")
+        
+    except Exception as e:
+        print(f"Error extracting tags from {source_file}: {e}")
+    
+    return artist, title
+
 
 
 
@@ -90,15 +97,24 @@ def get_json(artist: str, title: str) -> List[dict]:
     """
     query = f"{artist} {title}".replace(" ", "%20")
     url = f"{SEARCH_URL}?q={query}"
-    response = requests.get(url)
+    
     try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raise exception for non-200 status codes
+        
         json_data = response.json()
         if DEBUG_COMPLEX:
             print(f"Parsed JSON \"{artist} - {title}\"")
-        return json_data['tracks']['items']
+        
+        return json_data.get('tracks', {}).get('items', [])
+    
+    except requests.exceptions.RequestException as e:
+        print("Request error:", e)
     except json.decoder.JSONDecodeError as e:
         print("Error parsing JSON response:", e)
-        return None
+    
+    return None
+
 
 def parse_json(data: dict, key: str) -> str:
     """
