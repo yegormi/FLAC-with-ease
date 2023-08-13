@@ -21,7 +21,7 @@ KEYWORDS_TO_DELETE_AFTER = ["feat", "(", ",", "&"]
 # DO NOT CHANGE IT! CONSTANTS
 
 DEBUG               = True
-DEBUG_COMPLEX       = True
+DEBUG_COMPLEX       = False
 LOOK_FOR_ORIGINAL   = True
 RENAME_SOURCE_FILES = True
 SEARCH_URL   = "https://slavart.gamesdrive.net/api/search"
@@ -113,6 +113,59 @@ class Downloader:
                     
                     # Print a newline character to separate the progress bar from other output
                     print("\n")
+
+class Analyzer:
+    def has_cyrillic(self, input_string: str) -> bool:
+        """
+        Check if the given text contains Cyrillic characters.
+
+        Args:
+            input_string (str): The text to be checked.
+
+        Returns:
+            bool: True if the text contains Cyrillic characters, False otherwise.
+        """
+        return bool(re.search('[а-яА-Я]', input_string))
+
+    def has_exception(self, input_string: str) -> bool:
+        """
+        Check for any exceptions in the given title.
+        
+        Parameters:
+            title (str): The title to check for exceptions.
+            
+        Returns:
+            bool: True if an exception is found, False otherwise.
+        """
+        return self.has_word(input_string, EXCLUDE_ITEMS)
+
+    def has_word(self, input_string: str, word_dict: List[str]) -> bool:
+        """
+        Check if any word from the word dictionary is present in the input string.
+
+        Args:
+            input_string (str): The input string to search for words.
+            word_dict (List[str]): The list of words to search for in the input string.
+
+        Returns:
+            bool: True if any word from word_dict is found in the input_string, False otherwise.
+        """
+        return any(word in input_string for word in word_dict)
+
+    def is_similar(self, string1: str, string2: str) -> bool:
+        """
+        Check if two strings are similar based on their token set ratio.
+        
+        Parameters:
+            string1 (str): The first string to compare.
+            string2 (str): The second string to compare.
+            
+        Returns:
+            bool: True if the similarity ratio is greater than or equal to SIMILARITY_VALUE, False otherwise.
+        """
+        similarity_ratio = fuzz.token_set_ratio(string1, string2)
+        print("Similarity:", similarity_ratio)
+        return similarity_ratio >= SIMILARITY_VALUE
 
 
 
@@ -248,63 +301,66 @@ def remove_content_after_keyword(input_string: str) -> str:
             break
     return input_string
 
-def has_cyrillic(input_string: str) -> bool:
-    """
-    Check if the given text contains Cyrillic characters.
-
-    Args:
-        input_string (str): The text to be checked.
-
-    Returns:
-        bool: True if the text contains Cyrillic characters, False otherwise.
-    """
-    return bool(re.search('[а-яА-Я]', input_string))
-
 def extract_from(input_string: str, pattern: str) -> str:
 
     match = re.search(pattern, input_string)
-    print(f"Extracted: {match.group()}")
+    if DEBUG_COMPLEX:
+        print(f"Extracted: {match.group()}")
     return match.group() if match else ""
 
-def is_word_present(input_string: str, word_dict: List[str]) -> bool:
-    """
-    Check if any word from the word dictionary is present in the input string.
 
-    Args:
-        input_string (str): The input string to search for words.
-        word_dict (List[str]): The list of words to search for in the input string.
 
-    Returns:
-        bool: True if any word from word_dict is found in the input_string, False otherwise.
-    """
-    return any(word in input_string for word in word_dict)
+# def has_cyrillic(input_string: str) -> bool:
+#     """
+#     Check if the given text contains Cyrillic characters.
 
-def is_exception(input_string: str) -> bool:
-    """
-    Check for any exceptions in the given title.
+#     Args:
+#         input_string (str): The text to be checked.
+
+#     Returns:
+#         bool: True if the text contains Cyrillic characters, False otherwise.
+#     """
+#     return bool(re.search('[а-яА-Я]', input_string))
+
+# def is_exception(input_string: str) -> bool:
+#     """
+#     Check for any exceptions in the given title.
     
-    Parameters:
-        title (str): The title to check for exceptions.
+#     Parameters:
+#         title (str): The title to check for exceptions.
         
-    Returns:
-        bool: True if an exception is found, False otherwise.
-    """
-    return is_word_present(input_string, EXCLUDE_ITEMS)
+#     Returns:
+#         bool: True if an exception is found, False otherwise.
+#     """
+#     return is_word_present(input_string, EXCLUDE_ITEMS)
 
-def is_similar(string1: str, string2: str) -> bool:
-    """
-    Check if two strings are similar based on their token set ratio.
+# def is_word_present(input_string: str, word_dict: List[str]) -> bool:
+#     """
+#     Check if any word from the word dictionary is present in the input string.
+
+#     Args:
+#         input_string (str): The input string to search for words.
+#         word_dict (List[str]): The list of words to search for in the input string.
+
+#     Returns:
+#         bool: True if any word from word_dict is found in the input_string, False otherwise.
+#     """
+#     return any(word in input_string for word in word_dict)
+
+# def is_similar(string1: str, string2: str) -> bool:
+#     """
+#     Check if two strings are similar based on their token set ratio.
     
-    Parameters:
-        string1 (str): The first string to compare.
-        string2 (str): The second string to compare.
+#     Parameters:
+#         string1 (str): The first string to compare.
+#         string2 (str): The second string to compare.
         
-    Returns:
-        bool: True if the similarity ratio is greater than or equal to SIMILARITY_VALUE, False otherwise.
-    """
-    similarity_ratio = fuzz.token_set_ratio(string1, string2)
-    print("Similarity:", similarity_ratio)
-    return similarity_ratio >= SIMILARITY_VALUE
+#     Returns:
+#         bool: True if the similarity ratio is greater than or equal to SIMILARITY_VALUE, False otherwise.
+#     """
+#     similarity_ratio = fuzz.token_set_ratio(string1, string2)
+#     print("Similarity:", similarity_ratio)
+#     return similarity_ratio >= SIMILARITY_VALUE
 
 
 
@@ -385,6 +441,7 @@ def process_and_handle_songs(source_file_path: str, flac_folder_path: str) -> No
     artist_local, title_local = get_artist_and_title(source_file_path)
     list_of_songs = get_json(artist_local, title_local)
     name_local = f"{artist_local} - {title_local}"
+    string = Analyzer()
 
     if not list_of_songs:
         print("Could not find", name_local)
@@ -402,7 +459,7 @@ def process_and_handle_songs(source_file_path: str, flac_folder_path: str) -> No
         print("    Found:", filename)
         name_json = f"{artist} - {title}"
 
-        if is_exception(title):
+        if string.has_exception(title):
             print("An exception! Heading to the next one...\n")
             continue
 
@@ -412,7 +469,7 @@ def process_and_handle_songs(source_file_path: str, flac_folder_path: str) -> No
             continue
 
         song_action = song_handling()
-        if ((has_cyrillic(name_local) or has_cyrillic(name_json)) and not found):
+        if ((string.has_cyrillic(name_local) or string.has_cyrillic(name_json)) and not found):
             if song_action == Action.download:
                 found = True
                 perform_download(track_id, flac_folder_path, filename)                
@@ -430,7 +487,7 @@ def process_and_handle_songs(source_file_path: str, flac_folder_path: str) -> No
             else:
                 raise ValueError("Unknown error occurred") 
 
-        if is_similar(name_local, name_json):
+        if string.is_similar(name_local, name_json):
             perform_download(track_id, flac_folder_path, filename)                
             check_and_rename(source_file_path, "mp3f")
         else:
