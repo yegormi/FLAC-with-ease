@@ -143,6 +143,7 @@ def generate_filename(data: dict) -> str:
 
 
 
+
 def generate_url(track_id: int) -> str:
     """
     Generates a URL for downloading a track based on the given track ID.
@@ -367,7 +368,7 @@ def song_handling() -> Action:
         else:
             print("Invalid input. Please enter '1' or '2' or '3'.")
 
-def fetch_flac(source_file_path: str, flac_folder_path: str) -> None:
+def process_and_handle_songs(source_file_path: str, flac_folder_path: str) -> None:
     found = False
     artist_local, title_local = get_artist_and_title(source_file_path)
     list_of_songs = get_json(artist_local, title_local)
@@ -399,7 +400,7 @@ def fetch_flac(source_file_path: str, flac_folder_path: str) -> None:
             continue
 
         song_action = song_handling()
-        if (has_cyrillic(name_local) or has_cyrillic(name_json) and not found):
+        if ((has_cyrillic(name_local) or has_cyrillic(name_json)) and not found):
             if song_action == Action.download:
                 found = True
                 perform_download(track_id, flac_folder_path, filename)                
@@ -428,7 +429,7 @@ def main():
             mp3_filepath = os.path.join(SOURCE_FOLDER, filename)
 
             try:
-                fetch_flac(mp3_filepath, FLAC_FOLDER)
+                process_and_handle_songs(mp3_filepath, FLAC_FOLDER)
             except Exception as e:
                 error_message = f"An error occurred while processing {mp3_filepath}: {str(e)}"
                 print(error_message)
