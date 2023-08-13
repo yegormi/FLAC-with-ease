@@ -40,11 +40,80 @@ BASIC PROCESS:
 5. Moving downloaded file to destination folder
 '''
 
-
 class Action(Enum):
     download = 1
     skip = 2
     exit = 3
+
+class Downloader:
+    def __init__(self, track_id: int, folder_path: str, filename: str) -> None:
+        self.track_id = track_id
+        self.folder_path = folder_path
+        self.filename = filename
+
+    def _generate_url(self) -> str:
+        """
+        Generates a URL for downloading a track.
+
+        Returns:
+            str: The URL for downloading the track.
+        """
+        return f"{DOWNLOAD_URL}?id={self.track_id}"
+
+    def send_request(self) -> requests.Response:
+        """
+        Sends a download request and returns the response.
+        
+        Returns:
+            requests.Response: The response object containing the result of the download request.
+        """
+        if DEBUG_COMPLEX:
+            print(f"Sent request to download id={self.track_id}")
+
+        try:
+            url = self._generate_url()
+            response = requests.get(url, stream=True, verify=False)
+
+            if DEBUG_COMPLEX:
+                print("Response:", response.status_code)
+            
+            response.raise_for_status()  # Raise an exception for non-200 responses
+            
+            return response
+        
+        except requests.exceptions.RequestException as e:
+            print("An error occurred:", str(e))
+            # You can add additional error handling or logging here
+
+        return None
+
+    def with_progress_bar(self) -> None:
+        """
+        Downloads a file with a progress bar.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+        """
+        # Send a download request for the track
+        with self.send_request() as response:
+            # Get the total length of the file
+            total_length = int(response.headers.get("Content-Length"))
+            
+            # Wrap the response in a tqdm downloaded content
+            with tqdm.wrapattr(response.raw, "read", total=total_length, desc="") as downloaded:
+                # Create the file path
+                file_path = os.path.join(self.folder_path, self.filename)
+                
+                # Open the file in binary write mode
+                with open(file_path, 'wb') as file:
+                    # Copy the contents of the downloaded content to the file
+                    shutil.copyfileobj(downloaded, file)
+                    
+                    # Print a newline character to separate the progress bar from other output
+                    print("\n")
 
 
 
@@ -164,7 +233,7 @@ def generate_filename(data: dict) -> str:
 
 
 
-
+'''
 def generate_url(track_id: int) -> str:
     """
     Generates a URL for downloading a track based on the given track ID.
@@ -211,7 +280,6 @@ def send_download_request(track_id: int) -> requests.Response:
 
     return None
 
-
 def download_file_with_progress_bar(track_id: str, destination: str, filename: str) -> None:
     """
     Downloads a file with a progress bar.
@@ -242,6 +310,8 @@ def download_file_with_progress_bar(track_id: str, destination: str, filename: s
                 
                 # Print a newline character to separate the progress bar from other output
                 print("\n")
+
+'''
 
 
 
@@ -366,7 +436,8 @@ def check_and_rename(filepath: str, ext: str) -> None:
 
 def perform_download(track_id: int, folder_path: str, filename: str) -> None:
     print("FLAC is being downloaded")
-    download_file_with_progress_bar(track_id, folder_path, filename)
+    downloader = Downloader(track_id, folder_path, filename)
+    downloader.with_progress_bar()
 
 
 
