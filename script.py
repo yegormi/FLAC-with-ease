@@ -187,7 +187,7 @@ def download(track_id: int) -> requests.Response:
         requests.Response: The response object containing the downloaded track.
     """
     if DEBUG:
-        print("Sent request to download id=" + str(track_id))
+        print(f"Sent request to download id={track_id}")
 
     try:
         url = generate_url(track_id)
@@ -195,13 +195,17 @@ def download(track_id: int) -> requests.Response:
 
         if DEBUG:
             print("Response:", response.status_code)
+        
+        response.raise_for_status()  # Raise an exception for non-200 responses
+        
         return response
     
-    except Exception as e:
+    except requests.exceptions.RequestException as e:
         print("An error occurred:", str(e))
         # You can add additional error handling or logging here
 
     return None
+
 
 def download_file_with_progress_bar(track_id: str, destination: str, filename: str) -> None:
     """
