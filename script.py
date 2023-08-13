@@ -150,7 +150,8 @@ def generate_filename(data: dict) -> str:
     Returns:
         str: The generated filename for the FLAC audio file.
     """
-    artist        = parse_json(parse_json(data, "performer"), "name")
+    artist_dict   = parse_json(data, "performer")
+    artist        = parse_json(artist_dict, "name")
     title         = parse_json(data, "title")
     bit_depth     = parse_json(data, "maximum_bit_depth")
     sampling_rate = parse_json(data, "maximum_sampling_rate")
