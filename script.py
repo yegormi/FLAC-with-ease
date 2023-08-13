@@ -137,9 +137,8 @@ def generate_filename(data: dict) -> str:
     copyright     = parse_json(data, "copyright")
     year          = parse_year(copyright)
     filename      = f"{artist} - {title} ({year}) [FLAC] [{bit_depth}B - {sampling_rate}kHz].flac"
-    filename      = filename.replace("/", "-")
-    
-    return filename
+        
+    return filename.replace("/", "-")
 
 
 
@@ -154,8 +153,7 @@ def generate_url(track_id: int) -> str:
     Returns:
         str: The URL for downloading the track.
     """
-    url = f"{DOWNLOAD_URL}?id={track_id}"
-    return url
+    return f"{DOWNLOAD_URL}?id={track_id}"
 
 def download(track_id: int) -> requests.Response:
     """
@@ -280,8 +278,7 @@ def is_exception(input_string: str) -> bool:
     Returns:
         bool: True if an exception is found, False otherwise.
     """
-    is_present = is_word_present(input_string, EXCLUDE_ITEMS)
-    return is_present
+    return is_word_present(input_string, EXCLUDE_ITEMS)
 
 def is_similar(string1: str, string2: str) -> bool:
     """
