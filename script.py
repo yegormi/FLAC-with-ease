@@ -41,8 +41,9 @@ BASIC PROCESS:
 
 class Action(Enum):
     download = 1
-    skip = 2
-    exit = 3
+    skip     = 2
+    exit     = 3
+    quit     = 4
 
 class Downloader:
     DOWNLOAD_URL = "https://slavart-api.gamesdrive.net/api/download/track"
@@ -224,7 +225,7 @@ def generate_filename(data: dict) -> str:
     bit_depth     = parse_json(data, "maximum_bit_depth")
     sampling_rate = parse_json(data, "maximum_sampling_rate")
     copyright     = parse_json(data, "copyright")
-    year          = parse_year(copyright)
+    year          = extract_from(copyright, r'\b\d{4}\b')
     filename      = f"{artist} - {title} ({year}) [FLAC] [{bit_depth}B - {sampling_rate}kHz].flac"
         
     return filename.replace("/", "-")
@@ -259,17 +260,10 @@ def has_cyrillic(input_string: str) -> bool:
     """
     return bool(re.search('[а-яА-Я]', input_string))
 
-def parse_year(input_string: str) -> str:
-    """
-    Parse the year from the given text.
+def extract_from(input_string: str, pattern: str) -> str:
 
-    Parameters:
-        text (str): The text to search for a year.
-
-    Returns:
-        str: The parsed year as an integer if found, or an empty string if not found.
-    """
-    match = re.search(r'\b\d{4}\b', input_string)
+    match = re.search(pattern, input_string)
+    print(f"Extracted: {match.group()}")
     return match.group() if match else ""
 
 def is_word_present(input_string: str, word_dict: List[str]) -> bool:
@@ -373,6 +367,7 @@ def song_handling() -> Action:
         print("    1. Download")
         print("    2. Skip")
         print("    3. Exit")
+        print("    4. Quit")
         user_input = str(input("Enter your choice: "))
         if user_input == '1':
             return Action.download
@@ -380,6 +375,8 @@ def song_handling() -> Action:
             return Action.skip
         elif user_input == '3':
             return Action.exit
+        elif user_input == '4':
+            return Action.quit
         else:
             print("Invalid input. Please enter '1' or '2' or '3'.")
 
@@ -427,6 +424,9 @@ def process_and_handle_songs(source_file_path: str, flac_folder_path: str) -> No
             elif song_action == Action.exit:
                 print("Exited successfully")
                 break
+            elif song_action == Action.quit:
+                print("Program has been successfully terminated")
+                exit()
             else:
                 raise ValueError("Unknown error occurred") 
 
