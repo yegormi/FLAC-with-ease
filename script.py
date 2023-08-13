@@ -41,7 +41,7 @@ KEYWORDS_TO_DELETE_AFTER = ["feat", "(", ",", "&"]
 # DO NOT CHANGE IT! CONSTANTS
 
 DEBUG               = True
-DEBUG_COMPLEX       = False
+DEBUG_COMPLEX       = True
 LOOK_FOR_ORIGINAL   = True
 RENAME_SOURCE_FILES = True
 SOURCE_FOLDER       = "/Users/yegormyropoltsev/Desktop/mp3"
@@ -190,14 +190,14 @@ def send_download_request(track_id: int) -> requests.Response:
         requests.exceptions.RequestException: If an error occurs while sending the request.
 
     """
-    if DEBUG:
+    if DEBUG_COMPLEX:
         print(f"Sent request to download id={track_id}")
 
     try:
         url = generate_url(track_id)
         response = requests.get(url, stream=True, verify=False)
 
-        if DEBUG:
+        if DEBUG_COMPLEX:
             print("Response:", response.status_code)
         
         response.raise_for_status()  # Raise an exception for non-200 responses
@@ -223,7 +223,7 @@ def download_file_with_progress_bar(track_id: str, destination: str, filename: s
     Returns:
         None
     """
-    
+
     # Send a download request for the track
     with send_download_request(track_id) as response:
         # Get the total length of the file
