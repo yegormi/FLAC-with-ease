@@ -266,7 +266,6 @@ def get_json(artist: str, title: str) -> List[dict]:
     
     return None
 
-
 def parse_json(data: dict, key: str) -> str:
     """
     Parses the specified JSON object and returns the value of the specified key.
@@ -284,7 +283,6 @@ def parse_json(data: dict, key: str) -> str:
         print(f"Parsed {key} \"{value}\"")
     
     return value
-
 
 def generate_filename(data: dict) -> str:
     """
