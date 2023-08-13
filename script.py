@@ -127,45 +127,77 @@ class Analyzer:
         """
         return bool(re.search('[а-яА-Я]', input_string))
 
+    def has_word(self, input_string: str, word_dict: List[str]) -> bool:
+        """
+        Check if any word from the given word dictionary is present in the input string.
+
+        Parameters:
+            input_string (str): The input string to search for words in.
+            word_dict (List[str]): The list of words to search for in the input string.
+
+        Returns:
+            bool: True if any word from the word dictionary is present in the input string, False otherwise.
+        """
+        return any(word in input_string for word in word_dict)
+    
     def has_exception(self, input_string: str) -> bool:
         """
         Check for any exceptions in the given title.
         
         Parameters:
-            title (str): The title to check for exceptions.
+            input_string (str): The title to check for exceptions.
             
         Returns:
             bool: True if an exception is found, False otherwise.
         """
         return self.has_word(input_string, EXCLUDE_ITEMS)
 
-    def has_word(self, input_string: str, word_dict: List[str]) -> bool:
-        """
-        Check if any word from the word dictionary is present in the input string.
-
-        Args:
-            input_string (str): The input string to search for words.
-            word_dict (List[str]): The list of words to search for in the input string.
-
-        Returns:
-            bool: True if any word from word_dict is found in the input_string, False otherwise.
-        """
-        return any(word in input_string for word in word_dict)
-
     def is_similar(self, string1: str, string2: str) -> bool:
         """
         Check if two strings are similar based on their token set ratio.
-        
-        Parameters:
+
+        Args:
             string1 (str): The first string to compare.
             string2 (str): The second string to compare.
-            
+
         Returns:
             bool: True if the similarity ratio is greater than or equal to SIMILARITY_VALUE, False otherwise.
         """
         similarity_ratio = fuzz.token_set_ratio(string1, string2)
         print("Similarity:", similarity_ratio)
         return similarity_ratio >= SIMILARITY_VALUE
+
+    def remove_after_keyword(input_string: str) -> str:
+        """
+        Remove the part of the input string that comes after any of the keywords in KEYWORDS_TO_DELETE_AFTER.
+        
+        Args:
+            input_string (str): The input string from which to remove the text.
+            
+        Returns:
+            str: The modified input string with the text removed.
+        """
+        for keyword in KEYWORDS_TO_DELETE_AFTER:
+            if keyword in input_string:
+                input_string = input_string.split(keyword)[0]
+                break
+        return input_string
+
+    def extract_from(input_string: str, pattern: str) -> str:
+        """
+        Extracts a substring from the input string that matches the given pattern.
+
+        Parameters:
+            input_string (str): The input string from which to extract the substring.
+            pattern (str): The regular expression pattern used to match the substring.
+
+        Returns:
+            str: The extracted substring if a match is found, otherwise an empty string.
+        """
+        match = re.search(pattern, input_string)
+        if DEBUG_COMPLEX:
+            print(f"Extracted: {match.group()}")
+        return match.group() if match else ""
 
 
 
@@ -193,8 +225,8 @@ def get_artist_and_title(source_file: str) -> Tuple[str, str]:
                 print(f"\nExtracted: {artist} - {title}")
             
             if LOOK_FOR_ORIGINAL:
-                artist = remove_content_after_keyword(artist)
-                title = remove_content_after_keyword(title)
+                artist = Analyzer.remove_after_keyword(artist)
+                title = Analyzer.remove_after_keyword(title)
                 if DEBUG:
                     print(f"  Cleaned: {artist} - {title}")
         
@@ -202,9 +234,6 @@ def get_artist_and_title(source_file: str) -> Tuple[str, str]:
         print(f"Error extracting tags from {source_file}: {e}")
     
     return artist, title
-
-
-
 
 def get_json(artist: str, title: str) -> List[dict]:
     """
@@ -278,35 +307,11 @@ def generate_filename(data: dict) -> str:
     bit_depth     = parse_json(data, "maximum_bit_depth")
     sampling_rate = parse_json(data, "maximum_sampling_rate")
     copyright     = parse_json(data, "copyright")
-    year          = extract_from(copyright, r'\b\d{4}\b')
+    year          = Analyzer.extract_from(copyright, r'\b\d{4}\b')
     filename      = f"{artist} - {title} ({year}) [FLAC] [{bit_depth}B - {sampling_rate}kHz].flac"
         
     return filename.replace("/", "-")
 
-
-
-def remove_content_after_keyword(input_string: str) -> str:
-    """
-    Removes any content after a keyword in the input_string.
-
-    Args:
-        input_string (str): The string to check for keywords.
-
-    Returns:
-        str: The input_string with any content after the keyword removed.
-    """
-    for keyword in KEYWORDS_TO_DELETE_AFTER:
-        if keyword in input_string:
-            input_string = input_string.split(keyword)[0]
-            break
-    return input_string
-
-def extract_from(input_string: str, pattern: str) -> str:
-
-    match = re.search(pattern, input_string)
-    if DEBUG_COMPLEX:
-        print(f"Extracted: {match.group()}")
-    return match.group() if match else ""
 
 
 def rename_file(file_path: str, new_extension: str) -> None:
