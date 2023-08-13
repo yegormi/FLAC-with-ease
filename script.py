@@ -16,8 +16,6 @@ eyed3.log.setLevel("ERROR")
 # DO NOT CHANGE IT! CONSTANTS
 SIMILARITY_VALUE = 90
 SOURCE_EXTENSION = "mp3"
-SEARCH_URL       = "https://slavart.gamesdrive.net/api/search"
-DOWNLOAD_URL     = "https://slavart-api.gamesdrive.net/api/download/track"
 EXCLUDE_ITEMS    = ["Instrumental", "Karaoke"]
 KEYWORDS_TO_DELETE_AFTER = ["feat", "(", ",", "&"]
 # DO NOT CHANGE IT! CONSTANTS
@@ -26,6 +24,7 @@ DEBUG               = True
 DEBUG_COMPLEX       = True
 LOOK_FOR_ORIGINAL   = True
 RENAME_SOURCE_FILES = True
+SEARCH_URL   = "https://slavart.gamesdrive.net/api/search"
 SOURCE_FOLDER       = "/Users/yegormyropoltsev/Desktop/mp3"
 FLAC_FOLDER         = "/Users/yegormyropoltsev/Desktop/flac"
 
@@ -46,6 +45,8 @@ class Action(Enum):
     exit = 3
 
 class Downloader:
+    DOWNLOAD_URL = "https://slavart-api.gamesdrive.net/api/download/track"
+
     def __init__(self, track_id: int, folder_path: str, filename: str) -> None:
         self.track_id = track_id
         self.folder_path = folder_path
@@ -58,7 +59,7 @@ class Downloader:
         Returns:
             str: The URL for downloading the track.
         """
-        return f"{DOWNLOAD_URL}?id={self.track_id}"
+        return f"{self.DOWNLOAD_URL}?id={self.track_id}"
 
     def send_request(self) -> requests.Response:
         """
@@ -89,10 +90,7 @@ class Downloader:
 
     def with_progress_bar(self) -> None:
         """
-        Downloads a file with a progress bar.
-
-        Parameters:
-            None
+        Downloads a file from a given URL and displays a progress bar.
 
         Returns:
             None
