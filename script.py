@@ -176,15 +176,19 @@ def generate_url(track_id: int) -> str:
     """
     return f"{DOWNLOAD_URL}?id={track_id}"
 
-def download(track_id: int) -> requests.Response:
+def send_download_request(track_id: int) -> requests.Response:
     """
-    Downloads a track given its ID.
+    Sends a download request for a given track ID and returns the response.
 
     Parameters:
         track_id (int): The ID of the track to download.
 
     Returns:
-        requests.Response: The response object containing the downloaded track.
+        requests.Response: The response object containing the download data.
+
+    Raises:
+        requests.exceptions.RequestException: If an error occurs while sending the request.
+
     """
     if DEBUG:
         print(f"Sent request to download id={track_id}")
@@ -209,18 +213,19 @@ def download(track_id: int) -> requests.Response:
 
 def download_file_with_progress_bar(track_id: str, destination: str, filename: str) -> None:
     """
-    Download a file from a given URL and display a progress bar.
-    
+    Downloads a file with a progress bar.
+
     Args:
         track_id (str): The ID of the track to download.
-        destination (str): The destination directory to save the downloaded file.
-        filename (str): The name of the downloaded file.
+        destination (str): The destination directory to save the file.
+        filename (str): The name of the file to save.
+
+    Returns:
+        None
     """
-    # Get the URL for the track
-    url = generate_url(track_id)
     
-    # Send a GET request to the URL and stream the response
-    with requests.get(url, stream=True, verify=False) as response:
+    # Send a download request for the track
+    with send_download_request(track_id) as response:
         # Get the total length of the file
         total_length = int(response.headers.get("Content-Length"))
         
