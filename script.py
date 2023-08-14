@@ -218,6 +218,12 @@ class Handler:
         self._track_id, self._filename       = None, None
 
     def extract(self) -> Tuple[str, str]:
+        """
+        Extracts artist and title information from an audio file's metadata.
+        
+        Returns:
+            Tuple[str, str]: A tuple containing the artist and title of the audio file.
+        """
 
         artist, title = None, None
         try:
@@ -243,6 +249,12 @@ class Handler:
         return self._file_artist, self._file_title
 
     def request(self) -> List[dict]:
+        """
+        Sends a request to the specified URL and returns a list of dictionaries representing the response data.
+        
+        Returns:
+            List[dict]: A list of dictionaries representing the response data. Each dictionary represents a track item.
+        """
         if self._data is not None:
             return self._data
         
@@ -270,6 +282,16 @@ class Handler:
 
     @staticmethod
     def parse(data: dict,  key: str) -> dict | str | None:
+        """
+        Parse the given data dictionary to retrieve the value associated with the given key.
+        
+        Parameters:
+            data (dict): A dictionary containing key-value pairs.
+            key (str): The key to retrieve the value from the dictionary.
+        
+        Returns:
+            dict | str | None: The value associated with the key in the data dictionary. If the key is not present, returns None.
+        """
         value = data.get(key)
         
         if DEBUG_COMPLEX and value is not None:
@@ -278,6 +300,15 @@ class Handler:
         return value
 
     def set_info(self, data: dict) -> None:
+        """
+        Set the information of the track based on the provided data.
+
+        Parameters:
+            data (dict): A dictionary containing the track information.
+
+        Returns:
+            None
+        """
         _artist_dict        = self.parse(data, "performer")
         _copyright          = self.parse(data, "copyright")
         self._track_id      = self.parse(data, "id")
@@ -315,12 +346,31 @@ class File:
         self.filepath = filepath
 
     def extension_to(self, ext: str) -> None:
+        """
+        Rename the file extension of the current file to the specified extension.
+
+        Parameters:
+            ext (str): The new extension to assign to the file.
+
+        Returns:
+            None
+        """
         base_path = os.path.splitext(self.filepath)[0]
         new_filepath = f"{base_path}.{ext}"
         os.rename(self.filepath, new_filepath)
 
     @staticmethod
     def exists(filename: str, folder_path: str) -> bool:
+        """
+        Check if a file exists in a given folder.
+
+        Args:
+            filename (str): The name of the file to check.
+            folder_path (str): The path to the folder where the file should be located.
+
+        Returns:
+            bool: True if the file exists, False otherwise.
+        """
         filepath = os.path.join(folder_path, filename)
         return os.path.exists(filepath)
 
@@ -400,6 +450,7 @@ def process_and_handle_songs(source_file_path: str, flac_folder_path: str) -> No
                 exit()
             else:
                 raise ValueError("Error occurred") 
+            
         else:
             if Analyzer.is_similar(name_local, name_json):
                 perform_download(song.track_id, flac_folder_path, song.filename)      
@@ -413,7 +464,6 @@ def main():
     for file in source_files:
         if file.endswith("." + SOURCE_EXTENSION):
             mp3_filepath = os.path.join(SOURCE_FOLDER, file)
-
             try:
                 process_and_handle_songs(mp3_filepath, FLAC_FOLDER)
             except Exception as e:
