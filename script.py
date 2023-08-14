@@ -1,14 +1,14 @@
-import json     # JSON Management
-import os       # For renaming and placing files
-import re       # RegEx - extracting year from given string
-import shutil   # For downloading file
-from enum import Enum           # Create a custom enum
-from typing import List, Tuple  # Type hints
-from tqdm.auto import tqdm      # For progress bar
-from fuzzywuzzy import fuzz     # For fuzzy matching
-import eyed3     # For reading ID3 tags from mp3 files
-import requests  # For making an HTTP request
-import urllib3   # To supress unsecure HTTP requests
+import json
+import os
+import re
+import shutil
+from enum import Enum
+from typing import List, Tuple
+from tqdm.auto import tqdm
+from fuzzywuzzy import fuzz
+import eyed3
+import requests
+import urllib3
 
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -49,21 +49,9 @@ class Downloader:
         self.filename = filename
 
     def _url(self) -> str:
-        """
-        Generates a URL for downloading a track.
-
-        Returns:
-            str: The URL for downloading the track.
-        """
         return f"{Downloader.DOWNLOAD_URL}?id={self.track_id}"
 
     def request(self) -> requests.Response:
-        """
-        Sends a download request and returns the response.
-        
-        Returns:
-            requests.Response: The response object containing the result of the download request.
-        """
         if DEBUG_COMPLEX:
             print(f"Sent request to download id={self.track_id}")
 
@@ -75,38 +63,21 @@ class Downloader:
                 print("Response:", response.status_code)
             
             response.raise_for_status()  # Raise an exception for non-200 responses
-            
             return response
         
         except requests.exceptions.RequestException as e:
             print("An error occurred:", str(e))
-            # You can add additional error handling or logging here
 
         return None
 
     def with_progress_bar(self) -> None:
-        """
-        Downloads a file from a given URL and displays a progress bar.
-
-        Returns:
-            None
-        """
-        # Send a download request for the track
         with self.request() as response:
-            # Get the total length of the file
             total_length = int(response.headers.get("Content-Length"))
-            
-            # Wrap the response in a tqdm downloaded content
             with tqdm.wrapattr(response.raw, "read", total=total_length, desc="") as downloaded:
-                # Create the file path
                 file_path = os.path.join(self.folder_path, self.filename)
-                
                 # Open the file in binary write mode
                 with open(file_path, 'wb') as file:
-                    # Copy the contents of the downloaded content to the file
                     shutil.copyfileobj(downloaded, file)
-                    
-                    # Print a newline character to separate the progress bar from other output
                     print("\n")
 
 class Analyzer:
@@ -116,71 +87,24 @@ class Analyzer:
 
     @staticmethod
     def has_cyrillic(input_string: str) -> bool:
-        """
-        Check if the given text contains Cyrillic characters.
-
-        Args:
-            input_string (str): The text to be checked.
-
-        Returns:
-            bool: True if the text contains Cyrillic characters, False otherwise.
-        """
         return bool(re.search('[а-яА-Я]', input_string))
 
     @staticmethod
     def has_word(input_string: str, word_dict: List[str]) -> bool:
-        """
-        Check if any word from the given word dictionary is present in the input string.
-
-        Parameters:
-            input_string (str): The input string to search for words in.
-            word_dict (List[str]): The list of words to search for in the input string.
-
-        Returns:
-            bool: True if any word from the word dictionary is present in the input string, False otherwise.
-        """
         return any(word in input_string for word in word_dict)
     
     @staticmethod
     def has_exception(input_string: str) -> bool:
-        """
-        Check for any exceptions in the given title.
-        
-        Parameters:
-            input_string (str): The title to check for exceptions.
-            
-        Returns:
-            bool: True if an exception is found, False otherwise.
-        """
         return Analyzer.has_word(input_string, Analyzer.EXCLUDE_ITEMS)
 
     @staticmethod
     def is_similar(string1: str, string2: str) -> bool:
-        """
-        Check if two strings are similar based on their token set ratio.
-
-        Args:
-            string1 (str): The first string to compare.
-            string2 (str): The second string to compare.
-
-        Returns:
-            bool: True if the similarity ratio is greater than or equal to SIMILARITY_VALUE, False otherwise.
-        """
         similarity_ratio = fuzz.token_set_ratio(string1, string2)
         print("Similarity:", similarity_ratio)
         return similarity_ratio >= Analyzer.SIMILARITY_VALUE
 
     @staticmethod
     def remove_after_keyword(input_string: str) -> str:
-        """
-        Remove the part of the input string that comes after any of the keywords in KEYWORDS_TO_DELETE_AFTER.
-        
-        Args:
-            input_string (str): The input string from which to remove the text.
-            
-        Returns:
-            str: The modified input string with the text removed.
-        """
         for keyword in Analyzer.KEYWORDS_TO_DELETE_AFTER:
             if keyword in input_string:
                 input_string = input_string.split(keyword)[0]
@@ -189,16 +113,6 @@ class Analyzer:
 
     @staticmethod
     def extract_from(input_string: str, pattern: str) -> str:
-        """
-        Extracts a substring from the input string that matches the given pattern.
-
-        Parameters:
-            input_string (str): The input string from which to extract the substring.
-            pattern (str): The regular expression pattern used to match the substring.
-
-        Returns:
-            str: The extracted substring if a match is found, otherwise an empty string.
-        """
         match = re.search(pattern, input_string)
         if DEBUG_COMPLEX:
             print(f"Extracted: {match.group()}")
@@ -252,7 +166,7 @@ class Handler:
         Sends a request to the specified URL and returns a list of dictionaries representing the response data.
         
         Returns:
-            List[dict]: A list of dictionaries representing the response data. Each dictionary represents a track item.
+            List[dict]
         """
         if self._data is not None:
             return self._data
@@ -269,7 +183,6 @@ class Handler:
                 print(f"Parsed JSON for \"{self._file_artist} - {self._file_title}\"")
             
             self._data = data.get('tracks', {}).get('items', [])
-            # self._data = data['tracks']['items']
             return self._data
         
         except requests.exceptions.RequestException as e:
@@ -281,16 +194,6 @@ class Handler:
 
     @staticmethod
     def parse(data: dict,  key: str) -> dict | str | None:
-        """
-        Parse the given data dictionary to retrieve the value associated with the given key.
-        
-        Parameters:
-            data (dict): A dictionary containing key-value pairs.
-            key (str): The key to retrieve the value from the dictionary.
-        
-        Returns:
-            dict | str | None: The value associated with the key in the data dictionary. If the key is not present, returns None.
-        """
         value = data.get(key)
         
         if DEBUG_COMPLEX and value is not None:
@@ -299,15 +202,6 @@ class Handler:
         return value
 
     def set_info(self, data: dict) -> None:
-        """
-        Set the information of the track based on the provided data.
-
-        Parameters:
-            data (dict): A dictionary containing the track information.
-
-        Returns:
-            None
-        """
         _artist_dict        = self.parse(data, "performer")
         _copyright          = self.parse(data, "copyright")
         self._track_id      = self.parse(data, "id")
@@ -345,31 +239,12 @@ class File:
         self.filepath = filepath
 
     def extension_to(self, ext: str) -> None:
-        """
-        Rename the file extension of the current file to the specified extension.
-
-        Parameters:
-            ext (str): The new extension to assign to the file.
-
-        Returns:
-            None
-        """
         base_path = os.path.splitext(self.filepath)[0]
         new_filepath = f"{base_path}.{ext}"
         os.rename(self.filepath, new_filepath)
 
     @staticmethod
     def exists(filename: str, folder_path: str) -> bool:
-        """
-        Check if a file exists in a given folder.
-
-        Args:
-            filename (str): The name of the file to check.
-            folder_path (str): The path to the folder where the file should be located.
-
-        Returns:
-            bool: True if the file exists, False otherwise.
-        """
         filepath = os.path.join(folder_path, filename)
         return os.path.exists(filepath)
 
