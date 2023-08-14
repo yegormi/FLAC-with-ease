@@ -115,6 +115,7 @@ class Analyzer:
     SIMILARITY_VALUE = 90
     KEYWORDS_TO_DELETE_AFTER = ["feat", "(", ",", "&", "Музыка В Машину 2023"]
 
+    @staticmethod
     def has_cyrillic(input_string: str) -> bool:
         """
         Check if the given text contains Cyrillic characters.
@@ -127,6 +128,7 @@ class Analyzer:
         """
         return bool(re.search('[а-яА-Я]', input_string))
 
+    @staticmethod
     def has_word(input_string: str, word_dict: List[str]) -> bool:
         """
         Check if any word from the given word dictionary is present in the input string.
@@ -140,6 +142,7 @@ class Analyzer:
         """
         return any(word in input_string for word in word_dict)
     
+    @staticmethod
     def has_exception(input_string: str) -> bool:
         """
         Check for any exceptions in the given title.
@@ -152,6 +155,7 @@ class Analyzer:
         """
         return Analyzer.has_word(input_string, Analyzer.EXCLUDE_ITEMS)
 
+    @staticmethod
     def is_similar(string1: str, string2: str) -> bool:
         """
         Check if two strings are similar based on their token set ratio.
@@ -167,6 +171,7 @@ class Analyzer:
         print("Similarity:", similarity_ratio)
         return similarity_ratio >= Analyzer.SIMILARITY_VALUE
 
+    @staticmethod
     def remove_after_keyword(input_string: str) -> str:
         """
         Remove the part of the input string that comes after any of the keywords in KEYWORDS_TO_DELETE_AFTER.
@@ -183,6 +188,7 @@ class Analyzer:
                 break
         return input_string
 
+    @staticmethod
     def extract_from(input_string: str, pattern: str) -> str:
         """
         Extracts a substring from the input string that matches the given pattern.
@@ -262,7 +268,8 @@ class Handler:
         
         return None
 
-    def parse(self, data: dict,  key: str) -> dict | str | None:
+    @staticmethod
+    def parse(data: dict,  key: str) -> dict | str | None:
         value = data.get(key)
         
         if DEBUG_COMPLEX and value is not None:
@@ -303,32 +310,36 @@ class Handler:
     def filename(self):
         return self._filename
 
+class File:
+    def __init__(self, filepath: str) -> None:
+        self.filepath = filepath
+
+    def extension_to(self, ext: str) -> None:
+        base_path = os.path.splitext(self.filepath)[0]
+        new_filepath = f"{base_path}.{ext}"
+        os.rename(self.filepath, new_filepath)
+
+    @staticmethod
+    def exists(filename: str, folder_path: str) -> bool:
+        filepath = os.path.join(folder_path, filename)
+        return os.path.exists(filepath)
 
 
-def rename_file(filepath: str, ext: str) -> None:
-    """
-    Change the file extension of a given file path.
+# def rename_file(filepath: str, ext: str) -> None:
+#     base_path = os.path.splitext(filepath)[0]
+#     new_filepath = f"{base_path}.{ext}"
+#     os.rename(filepath, new_filepath)
 
-    Args:
-        file_path (str): The path of the file to be modified.
-        ext (str): The new extension to be applied to the file.
-
-    Returns:
-        None
-    """
-    base_path = os.path.splitext(filepath)[0]
-    new_filepath = f"{base_path}.{ext}"
-    os.rename(filepath, new_filepath)
-
-def does_file_exist(folder_path: str, filename: str) -> bool:
-    filepath = os.path.join(folder_path, filename)
-    return os.path.exists(filepath)
+# def does_exist(filename: str, folder_path: str, ) -> bool:
+#     filepath = os.path.join(folder_path, filename)
+#     return os.path.exists(filepath)
 
 
 
 def check_and_rename(filepath: str, ext: str) -> None:
     if RENAME_SOURCE_FILES:
-        rename_file(filepath, ext)
+        file = File(filepath)
+        file.extension_to(ext)
         print("Source file has been renamed")
 
 def perform_download(track_id: int, folder_path: str, filename: str) -> None:
@@ -376,7 +387,7 @@ def process_and_handle_songs(source_file_path: str, flac_folder_path: str) -> No
             print("An exception! Heading to the next one...\n")
             continue
 
-        if does_file_exist(flac_folder_path, song.filename):
+        if File.exists(song.filename, flac_folder_path):
             print("File already exists. Skipping...\n")
             check_and_rename(source_file_path, "mp3f")
             continue
