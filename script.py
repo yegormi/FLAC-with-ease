@@ -44,14 +44,14 @@ def song_handling() -> Action:
 def process_and_handle_songs(source_file_path: str, flac_folder_path: str) -> None:
     song = SongHandler(source_file_path)
     artist_local, title_local = song.extract()
-    list_of_songs = song.request()
+    songs = song.request()
     name_local = f"{artist_local} - {title_local}"
 
-    if not list_of_songs:
+    if not songs:
         print("Could not find", name_local)
         return
     
-    for item in list_of_songs:
+    for item in songs:
         song.set_info(item)
         print("    Found:", song.filename)
         name_json = f"{song.artist} - {song.title}"
