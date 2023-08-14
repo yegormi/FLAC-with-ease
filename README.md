@@ -8,7 +8,6 @@
 
 ## Key Features
 
-* Choosing other formats than MP3
 * Asks you, if script doesn't know what to do
 * Renaming source files, so you don't get confused
 * Cross platform
