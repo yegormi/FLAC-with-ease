@@ -91,7 +91,7 @@ class Analyzer:
             print(f"Extracted: {match.group()}")
         return match.group() if match else ""
 
-class SongHandler:
+class Song:
     SEARCH_URL = "https://slavart.gamesdrive.net/api/search"
     LOOK_FOR_ORIGINAL = True
 
@@ -208,7 +208,7 @@ class SongHandler:
     def filename(self):
         return self._filename
 
-class FileHandler:
+class File:
     def __init__(self, filepath: str) -> None:
         self.filepath = filepath
 

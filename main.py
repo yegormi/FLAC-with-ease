@@ -10,7 +10,7 @@ eyed3.log.setLevel("ERROR")
 
 def check_and_rename(filepath: str, ext: str) -> None:
     if const.RENAME_SOURCE_FILES:
-        file = FileHandler(filepath)
+        file = File(filepath)
         file.extension_to(ext)
         print("Source file has been renamed")
 
@@ -39,7 +39,7 @@ def song_handling() -> Action:
             print("Invalid input. Please enter '1' or '2' or '3'.")
 
 def process_songs(source_file_path: str, flac_folder_path: str) -> None:
-    song = SongHandler(source_file_path)
+    song = Song(source_file_path)
     artist_local, title_local = song.extract()
     songs = song.request()
     name_local = f"{artist_local} - {title_local}"
