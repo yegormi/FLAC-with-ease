@@ -410,9 +410,9 @@ def process_and_handle_songs(source_file_path: str, flac_folder_path: str) -> No
 def main():
     source_files = os.listdir(SOURCE_FOLDER)
     
-    for filename in source_files:
-        if filename.endswith("." + SOURCE_EXTENSION):
-            mp3_filepath = os.path.join(SOURCE_FOLDER, filename)
+    for file in source_files:
+        if file.endswith("." + SOURCE_EXTENSION):
+            mp3_filepath = os.path.join(SOURCE_FOLDER, file)
 
             try:
                 process_and_handle_songs(mp3_filepath, FLAC_FOLDER)
