@@ -14,9 +14,7 @@ import urllib3   # To supress unsecure HTTP requests
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 eyed3.log.setLevel("ERROR")
 
-# DO NOT CHANGE IT! CONSTANTS
 SOURCE_EXTENSION = "mp3"
-# DO NOT CHANGE IT! CONSTANTS
 
 DEBUG               = True
 DEBUG_COMPLEX       = False
