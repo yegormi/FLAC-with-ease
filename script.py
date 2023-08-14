@@ -49,7 +49,7 @@ class Downloader:
         self.folder_path = folder_path
         self.filename = filename
 
-    def _generate_url(self) -> str:
+    def _url(self) -> str:
         """
         Generates a URL for downloading a track.
 
@@ -58,7 +58,7 @@ class Downloader:
         """
         return f"{Downloader.DOWNLOAD_URL}?id={self.track_id}"
 
-    def send_request(self) -> requests.Response:
+    def request(self) -> requests.Response:
         """
         Sends a download request and returns the response.
         
@@ -69,7 +69,7 @@ class Downloader:
             print(f"Sent request to download id={self.track_id}")
 
         try:
-            url = self._generate_url()
+            url = self._url()
             response = requests.get(url, stream=True, verify=False)
 
             if DEBUG_COMPLEX:
@@ -93,7 +93,7 @@ class Downloader:
             None
         """
         # Send a download request for the track
-        with self.send_request() as response:
+        with self.request() as response:
             # Get the total length of the file
             total_length = int(response.headers.get("Content-Length"))
             
