@@ -6,6 +6,16 @@
 
 <h4 align="center">A python script that downloads FLAC music files based on you existing Music library</h4>
 
+## Basic process:
+
+1. Reading metadata from MP3 files (artist, title)
+2. Making a JSON request using artist and title
+3. Extracting specific variable from JSON content
+4. Make a download request, if there is a response, download it
+4. Renaming downloaded file
+5. Moving downloaded file to destination folder
+
+
 ## Key Features
 
 * Asks you, if script doesn't know what to do

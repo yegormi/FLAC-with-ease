@@ -14,25 +14,6 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 eyed3.log.setLevel("ERROR")
 
-SOURCE_EXTENSION = "mp3"
-
-DEBUG               = True
-DEBUG_COMPLEX       = False
-LOOK_FOR_ORIGINAL   = True
-RENAME_SOURCE_FILES = True
-SOURCE_FOLDER       = "path/to/mp3/folder"
-FLAC_FOLDER         = "path/to/flac/folder"
-
-'''
-BASIC PROCESS:
-
-1. Reading metadata from MP3 files (artist, title)
-2. Making a JSON request using artist and title
-3. Extracting specific variable from JSON content
-4. Make a download request, if there is a response, download it
-4. Renaming downloaded file
-5. Moving downloaded file to destination folder
-'''
 
 class Action(Enum):
     download = 1
