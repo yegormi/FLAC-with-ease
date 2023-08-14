@@ -321,20 +321,8 @@ def rename_file(filepath: str, ext: str) -> None:
     os.rename(filepath, new_filepath)
 
 def does_file_exist(folder_path: str, filename: str) -> bool:
-    """
-    Check if a file exists in a given folder path.
-
-    Args:
-        flac_folder_path (str): The path to the folder where the file should be located.
-        flac_filename (str): The name of the file to check.
-
-    Returns:
-        bool: True if the file exists, False otherwise.
-    """
     filepath = os.path.join(folder_path, filename)
-    if os.path.exists(filepath):
-        return True
-    return False
+    return os.path.exists(filepath)
 
 
 
@@ -351,16 +339,6 @@ def perform_download(track_id: int, folder_path: str, filename: str) -> None:
 
 
 def song_handling() -> Action:
-    """
-    Handles the user interaction for song handling.
-    
-    This function prompts the user with options for handling a song and 
-    returns the appropriate action based on the user's choice.
-    
-    Returns:
-        Action: The action to be taken for the song. It can be 
-        Action.download, Action.skip, or Action.exit.
-    """
     while True:
         print("Does this song match your request?")
         print("    1. Download")
