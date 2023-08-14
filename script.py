@@ -112,6 +112,7 @@ class Handler:
         self._track_id, self._filename       = None, None
 
     def extract(self) -> Tuple[str, str]:
+        LOOK_FOR_ORIGINAL = True
         """
         Extracts artist and title information from an audio file's metadata.
         
@@ -130,7 +131,7 @@ class Handler:
                 if const.DEBUG:
                     print(f"\nExtracted: {artist} - {title}")
                 
-                if const.LOOK_FOR_ORIGINAL:
+                if self.LOOK_FOR_ORIGINAL:
                     artist = Analyzer.remove_after_keyword(artist)
                     title = Analyzer.remove_after_keyword(title)
                     if const.DEBUG:
