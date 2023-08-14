@@ -4,7 +4,6 @@ import urllib3
 import config as const
 from classes import *
 
-
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 eyed3.log.setLevel("ERROR")
 
