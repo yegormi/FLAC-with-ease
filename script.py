@@ -435,11 +435,11 @@ def main():
         if filename.endswith("." + SOURCE_EXTENSION):
             mp3_filepath = os.path.join(SOURCE_FOLDER, filename)
 
-            # try:
-            process_and_handle_songs(mp3_filepath, FLAC_FOLDER)
-            # except Exception as e:
-            #     error_message = f"An error occurred while processing {mp3_filepath}: {str(e)}"
-            #     print(error_message)
+            try:
+                process_and_handle_songs(mp3_filepath, FLAC_FOLDER)
+            except Exception as e:
+                error_message = f"An error occurred while processing {mp3_filepath}: {str(e)}"
+                print(error_message)
              
 if __name__ == "__main__":
     main()
