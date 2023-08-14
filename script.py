@@ -10,6 +10,7 @@ import eyed3     # For reading ID3 tags from mp3 files
 import requests  # For making an HTTP request
 import urllib3   # To supress unsecure HTTP requests
 
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 eyed3.log.setLevel("ERROR")
 
@@ -21,8 +22,8 @@ DEBUG               = True
 DEBUG_COMPLEX       = False
 LOOK_FOR_ORIGINAL   = True
 RENAME_SOURCE_FILES = True
-SOURCE_FOLDER       = "/Users/yegormyropoltsev/Desktop/mp3"
-FLAC_FOLDER         = "/Users/yegormyropoltsev/Desktop/flac"
+SOURCE_FOLDER       = "path/to/mp3/folder"
+FLAC_FOLDER         = "path/to/flac/folder"
 
 '''
 BASIC PROCESS:
