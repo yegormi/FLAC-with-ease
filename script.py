@@ -325,16 +325,6 @@ class File:
         return os.path.exists(filepath)
 
 
-# def rename_file(filepath: str, ext: str) -> None:
-#     base_path = os.path.splitext(filepath)[0]
-#     new_filepath = f"{base_path}.{ext}"
-#     os.rename(filepath, new_filepath)
-
-# def does_exist(filename: str, folder_path: str, ) -> bool:
-#     filepath = os.path.join(folder_path, filename)
-#     return os.path.exists(filepath)
-
-
 
 def check_and_rename(filepath: str, ext: str) -> None:
     if RENAME_SOURCE_FILES:
