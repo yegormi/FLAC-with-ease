@@ -305,22 +305,22 @@ class Handler:
 
 
 
-def rename_file(file_path: str, new_extension: str) -> None:
+def rename_file(filepath: str, ext: str) -> None:
     """
     Change the file extension of a given file path.
 
     Args:
         file_path (str): The path of the file to be modified.
-        new_extension (str): The new extension to be applied to the file.
+        ext (str): The new extension to be applied to the file.
 
     Returns:
         None
     """
-    base_path = os.path.splitext(file_path)[0]
-    new_file_path = f"{base_path}.{new_extension}"
-    os.rename(file_path, new_file_path)
+    base_path = os.path.splitext(filepath)[0]
+    new_filepath = f"{base_path}.{ext}"
+    os.rename(filepath, new_filepath)
 
-def does_file_exist(flac_folder_path: str, flac_filename: str) -> bool:
+def does_file_exist(folder_path: str, filename: str) -> bool:
     """
     Check if a file exists in a given folder path.
 
@@ -331,10 +331,12 @@ def does_file_exist(flac_folder_path: str, flac_filename: str) -> bool:
     Returns:
         bool: True if the file exists, False otherwise.
     """
-    flac_file_path = os.path.join(flac_folder_path, flac_filename)
-    if os.path.exists(flac_file_path):
+    filepath = os.path.join(folder_path, filename)
+    if os.path.exists(filepath):
         return True
     return False
+
+
 
 def check_and_rename(filepath: str, ext: str) -> None:
     if RENAME_SOURCE_FILES:
@@ -418,7 +420,7 @@ def process_and_handle_songs(source_file_path: str, flac_folder_path: str) -> No
                 print("Program has been successfully terminated")
                 exit()
             else:
-                raise ValueError("Unknown error occurred") 
+                raise ValueError("Error occurred") 
         else:
             if Analyzer.is_similar(name_local, name_json):
                 perform_download(song.track_id, flac_folder_path, song.filename)      
