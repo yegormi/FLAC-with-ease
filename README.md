@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-  <a href="https://github.com/yegormi/FLAC-with-ease"><img src="https://www.python.org/static/img/python-logo-large.png" alt="Python" width="200"></a>
+  <a href="https://github.com/yegormi/FLAC-with-ease"><img src="https://s3.dualstack.us-east-2.amazonaws.com/pythondotorg-assets/media/files/python-logo-only.svg" alt="Python" width="200"></a>
   <br>
 </h1>
 
