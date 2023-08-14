@@ -101,6 +101,7 @@ class Analyzer:
 
 class Handler:
     SEARCH_URL = "https://slavart.gamesdrive.net/api/search"
+    LOOK_FOR_ORIGINAL = True
 
     def __init__(self, source_file: str) -> None:
         self.source_file = source_file
@@ -112,7 +113,6 @@ class Handler:
         self._track_id, self._filename       = None, None
 
     def extract(self) -> Tuple[str, str]:
-        LOOK_FOR_ORIGINAL = True
         """
         Extracts artist and title information from an audio file's metadata.
         
