@@ -9,7 +9,7 @@ from fuzzywuzzy import fuzz
 import eyed3
 import requests
 import urllib3
-
+import config as const
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 eyed3.log.setLevel("ERROR")
@@ -33,14 +33,14 @@ class Downloader:
         return f"{Downloader.DOWNLOAD_URL}?id={self.track_id}"
 
     def request(self) -> requests.Response:
-        if DEBUG_COMPLEX:
+        if const.DEBUG_COMPLEX:
             print(f"Sent request to download id={self.track_id}")
 
         try:
             url = self._url()
             response = requests.get(url, stream=True, verify=False)
 
-            if DEBUG_COMPLEX:
+            if const.DEBUG_COMPLEX:
                 print("Response:", response.status_code)
             
             response.raise_for_status()  # Raise an exception for non-200 responses
@@ -95,7 +95,7 @@ class Analyzer:
     @staticmethod
     def extract_from(input_string: str, pattern: str) -> str:
         match = re.search(pattern, input_string)
-        if DEBUG_COMPLEX:
+        if const.DEBUG_COMPLEX:
             print(f"Extracted: {match.group()}")
         return match.group() if match else ""
 
@@ -127,13 +127,13 @@ class Handler:
                 artist = audiofile.tag.artist
                 title = audiofile.tag.title
                 
-                if DEBUG:
+                if const.DEBUG:
                     print(f"\nExtracted: {artist} - {title}")
                 
-                if LOOK_FOR_ORIGINAL:
+                if const.LOOK_FOR_ORIGINAL:
                     artist = Analyzer.remove_after_keyword(artist)
                     title = Analyzer.remove_after_keyword(title)
-                    if DEBUG:
+                    if const.DEBUG:
                         print(f"  Cleaned: {artist} - {title}")
             
         except Exception as e:
@@ -160,7 +160,7 @@ class Handler:
             response.raise_for_status()  # Raise exception for non-200 status codes
             
             data = response.json()
-            if DEBUG_COMPLEX:
+            if const.DEBUG_COMPLEX:
                 print(f"Parsed JSON for \"{self._file_artist} - {self._file_title}\"")
             
             self._data = data.get('tracks', {}).get('items', [])
@@ -177,7 +177,7 @@ class Handler:
     def parse(data: dict,  key: str) -> dict | str | None:
         value = data.get(key)
         
-        if DEBUG_COMPLEX and value is not None:
+        if const.DEBUG_COMPLEX and value is not None:
             print(f"Parsed {key} \"{value}\"")
         
         return value
@@ -232,7 +232,7 @@ class File:
 
 
 def check_and_rename(filepath: str, ext: str) -> None:
-    if RENAME_SOURCE_FILES:
+    if const.RENAME_SOURCE_FILES:
         file = File(filepath)
         file.extension_to(ext)
         print("Source file has been renamed")
@@ -314,13 +314,13 @@ def process_and_handle_songs(source_file_path: str, flac_folder_path: str) -> No
                 print("Songs do not match\n")
 
 def main():
-    source_files = os.listdir(SOURCE_FOLDER)
+    source_files = os.listdir(const.SOURCE_FOLDER)
     
     for file in source_files:
-        if file.endswith("." + SOURCE_EXTENSION):
-            mp3_filepath = os.path.join(SOURCE_FOLDER, file)
+        if file.endswith("." + const.SOURCE_EXTENSION):
+            mp3_filepath = os.path.join(const.SOURCE_FOLDER, file)
             try:
-                process_and_handle_songs(mp3_filepath, FLAC_FOLDER)
+                process_and_handle_songs(mp3_filepath, const.FLAC_FOLDER)
             except Exception as e:
                 error_message = f"An error occurred while processing {mp3_filepath}: {str(e)}"
                 print(error_message)
