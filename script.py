@@ -14,17 +14,13 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 eyed3.log.setLevel("ERROR")
 
 # DO NOT CHANGE IT! CONSTANTS
-SIMILARITY_VALUE = 90
 SOURCE_EXTENSION = "mp3"
-EXCLUDE_ITEMS    = ["Instrumental", "Karaoke"]
-KEYWORDS_TO_DELETE_AFTER = ["feat", "(", ",", "&", "Музыка В Машину 2023"]
 # DO NOT CHANGE IT! CONSTANTS
 
 DEBUG               = True
 DEBUG_COMPLEX       = False
 LOOK_FOR_ORIGINAL   = True
 RENAME_SOURCE_FILES = True
-SEARCH_URL   = "https://slavart.gamesdrive.net/api/search"
 SOURCE_FOLDER       = "/Users/yegormyropoltsev/Desktop/mp3"
 FLAC_FOLDER         = "/Users/yegormyropoltsev/Desktop/flac"
 
@@ -60,7 +56,7 @@ class Downloader:
         Returns:
             str: The URL for downloading the track.
         """
-        return f"{self.DOWNLOAD_URL}?id={self.track_id}"
+        return f"{Downloader.DOWNLOAD_URL}?id={self.track_id}"
 
     def send_request(self) -> requests.Response:
         """
@@ -115,7 +111,11 @@ class Downloader:
                     print("\n")
 
 class Analyzer:
-    def has_cyrillic(self, input_string: str) -> bool:
+    EXCLUDE_ITEMS = ["Instrumental", "Karaoke"]
+    SIMILARITY_VALUE = 90
+    KEYWORDS_TO_DELETE_AFTER = ["feat", "(", ",", "&", "Музыка В Машину 2023"]
+
+    def has_cyrillic(input_string: str) -> bool:
         """
         Check if the given text contains Cyrillic characters.
 
@@ -127,7 +127,7 @@ class Analyzer:
         """
         return bool(re.search('[а-яА-Я]', input_string))
 
-    def has_word(self, input_string: str, word_dict: List[str]) -> bool:
+    def has_word(input_string: str, word_dict: List[str]) -> bool:
         """
         Check if any word from the given word dictionary is present in the input string.
 
@@ -140,7 +140,7 @@ class Analyzer:
         """
         return any(word in input_string for word in word_dict)
     
-    def has_exception(self, input_string: str) -> bool:
+    def has_exception(input_string: str) -> bool:
         """
         Check for any exceptions in the given title.
         
@@ -150,9 +150,9 @@ class Analyzer:
         Returns:
             bool: True if an exception is found, False otherwise.
         """
-        return self.has_word(input_string, EXCLUDE_ITEMS)
+        return Analyzer.has_word(input_string, Analyzer.EXCLUDE_ITEMS)
 
-    def is_similar(self, string1: str, string2: str) -> bool:
+    def is_similar(string1: str, string2: str) -> bool:
         """
         Check if two strings are similar based on their token set ratio.
 
@@ -165,7 +165,7 @@ class Analyzer:
         """
         similarity_ratio = fuzz.token_set_ratio(string1, string2)
         print("Similarity:", similarity_ratio)
-        return similarity_ratio >= SIMILARITY_VALUE
+        return similarity_ratio >= Analyzer.SIMILARITY_VALUE
 
     def remove_after_keyword(input_string: str) -> str:
         """
@@ -177,7 +177,7 @@ class Analyzer:
         Returns:
             str: The modified input string with the text removed.
         """
-        for keyword in KEYWORDS_TO_DELETE_AFTER:
+        for keyword in Analyzer.KEYWORDS_TO_DELETE_AFTER:
             if keyword in input_string:
                 input_string = input_string.split(keyword)[0]
                 break
@@ -199,116 +199,109 @@ class Analyzer:
             print(f"Extracted: {match.group()}")
         return match.group() if match else ""
 
+class Handler:
+    SEARCH_URL = "https://slavart.gamesdrive.net/api/search"
 
+    def __init__(self, source_file: str) -> None:
+        self.source_file = source_file
+        self._data = None
+        self._file_artist, self._file_title = None, None
+        self._artist, self._title            = None, None
+        self._bit_depth, self._sampling_rate = None, None
+        self._year          = None
+        self._track_id, self._filename       = None, None
 
-def get_artist_and_title(source_file: str) -> Tuple[str, str]:
-    """
-    Extracts the artist and title information from an MP3 file.
+    def extract(self) -> Tuple[str, str]:
 
-    Args:
-        source_file (str): The path to the MP3 file.
-
-    Returns:
-        tuple: A tuple containing the artist and title extracted from the MP3 file.
-               If the MP3 file does not have tag information, returns (None, None).
-    """
-    artist, title = None, None
-    
-    try:
-        audiofile = eyed3.load(source_file)
-        
-        if audiofile.tag:
-            artist = audiofile.tag.artist
-            title = audiofile.tag.title
+        artist, title = None, None
+        try:
+            audiofile = eyed3.load(self.source_file)
             
-            if DEBUG:
-                print(f"\nExtracted: {artist} - {title}")
-            
-            if LOOK_FOR_ORIGINAL:
-                artist = Analyzer.remove_after_keyword(artist)
-                title = Analyzer.remove_after_keyword(title)
+            if audiofile.tag:
+                artist = audiofile.tag.artist
+                title = audiofile.tag.title
+                
                 if DEBUG:
-                    print(f"  Cleaned: {artist} - {title}")
+                    print(f"\nExtracted: {artist} - {title}")
+                
+                if LOOK_FOR_ORIGINAL:
+                    artist = Analyzer.remove_after_keyword(artist)
+                    title = Analyzer.remove_after_keyword(title)
+                    if DEBUG:
+                        print(f"  Cleaned: {artist} - {title}")
+            
+        except Exception as e:
+            print(f"Error extracting tags from {self.source_file}: {e}")
         
-    except Exception as e:
-        print(f"Error extracting tags from {source_file}: {e}")
-    
-    return artist, title
+        self._file_artist, self._file_title = artist, title
+        return self._file_artist, self._file_title
 
-def get_json(artist: str, title: str) -> List[dict]:
-    """
-    Retrieves a JSON response from the specified API endpoint by making a GET request with the provided artist and title parameters.
-
-    Parameters:
-        artist (str): The name of the artist.
-        title (str): The title of the song.
-    
-    Returns:
-        list: A list of track items from the JSON response, or None if there was an error parsing the JSON.
-    """
-    query = f"{artist} {title}".replace(" ", "%20")
-    url = f"{SEARCH_URL}?q={query}"
-    
-    try:
-        response = requests.get(url)
-        response.raise_for_status()  # Raise exception for non-200 status codes
+    def request(self) -> List[dict]:
+        if self._data is not None:
+            return self._data
         
-        json_data = response.json()
-        if DEBUG_COMPLEX:
-            print(f"Parsed JSON \"{artist} - {title}\"")
+        query = f"{self._file_artist} {self._file_title}".replace(" ", "%20")
+        url = f"{self.SEARCH_URL}?q={query}"
         
-        return json_data.get('tracks', {}).get('items', [])
-    
-    except requests.exceptions.RequestException as e:
-        print("Request error:", e)
-    except json.decoder.JSONDecodeError as e:
-        print("Error parsing JSON response:", e)
-    
-    return None
-
-def parse_json(data: dict, key: str) -> str:
-    """
-    Parses the specified JSON object and returns the value of the specified key.
-
-    Parameters:
-        data (dict): The JSON object to parse.
-        key (str): The name of the key to retrieve from the JSON object.
-
-    Returns:
-        The value of the specified key from the JSON object.
-    """
-    value = data.get(key)
-    
-    if DEBUG_COMPLEX and value is not None:
-        print(f"Parsed {key} \"{value}\"")
-    
-    return value
-
-def generate_filename(data: dict) -> str:
-    """
-    Generate a filename for a FLAC audio file based on the given data.
-
-    Parameters:
-        data (dict): The data used to generate the filename. It should contain the following keys:
-            - 'performer' (str): The name of the artist.
-            - 'title' (str): The title of the audio file.
-            - 'maximum_bit_depth' (int): The maximum bit depth of the audio file.
-            - 'maximum_sampling_rate' (float): The maximum sampling rate of the audio file.
-            - 'copyright' (str): The copyright information.
-
-    Returns:
-        str: The generated filename for the FLAC audio file.
-    """
-    artist_dict   = parse_json(data, "performer")
-    artist        = parse_json(artist_dict, "name")
-    title         = parse_json(data, "title")
-    bit_depth     = parse_json(data, "maximum_bit_depth")
-    sampling_rate = parse_json(data, "maximum_sampling_rate")
-    copyright     = parse_json(data, "copyright")
-    year          = Analyzer.extract_from(copyright, r'\b\d{4}\b')
-    filename      = f"{artist} - {title} ({year}) [FLAC] [{bit_depth}B - {sampling_rate}kHz].flac"
+        try:
+            response = requests.get(url)
+            response.raise_for_status()  # Raise exception for non-200 status codes
+            
+            data = response.json()
+            if DEBUG_COMPLEX:
+                print(f"Parsed JSON for \"{self._file_artist} - {self._file_title}\"")
+            
+            self._data = data.get('tracks', {}).get('items', [])
+            # self._data = data['tracks']['items']
+            return self._data
         
-    return filename.replace("/", "-")
+        except requests.exceptions.RequestException as e:
+            print("Request error:", e)
+        except json.decoder.JSONDecodeError as e:
+            print("Error parsing JSON response:", e)
+        
+        return None
+
+    def parse(self, data: dict,  key: str) -> dict | str | None:
+        value = data.get(key)
+        
+        if DEBUG_COMPLEX and value is not None:
+            print(f"Parsed {key} \"{value}\"")
+        
+        return value
+
+    def set_info(self, data: dict) -> None:
+        _artist_dict        = self.parse(data, "performer")
+        _copyright          = self.parse(data, "copyright")
+        self._track_id      = self.parse(data, "id")
+        self._artist        = _artist_dict.get('name')
+        self._title         = self.parse(data, "title")
+        self._bit_depth     = self.parse(data, "maximum_bit_depth")
+        self._sampling_rate = self.parse(data, "maximum_sampling_rate")
+        self._year          = Analyzer.extract_from(_copyright, r'\b\d{4}\b')
+        self._filename      = f"{self._artist} - {self._title} ({self._year}) [FLAC] [{self._bit_depth}B - {self._sampling_rate}kHz].flac"
+    
+    @property
+    def artist(self):
+        return self._artist
+    @property
+    def title(self):
+        return self._title
+    @property
+    def track_id(self):
+        return self._track_id
+    @property
+    def bit_depth(self):
+        return self._bit_depth
+    @property
+    def sampling_rate(self):
+        return self._sampling_rate
+    @property
+    def year(self):
+        return self._year
+    @property
+    def filename(self):
+        return self._filename
 
 
 
@@ -385,39 +378,34 @@ def song_handling() -> Action:
             print("Invalid input. Please enter '1' or '2' or '3'.")
 
 def process_and_handle_songs(source_file_path: str, flac_folder_path: str) -> None:
-    artist_local, title_local = get_artist_and_title(source_file_path)
-    list_of_songs = get_json(artist_local, title_local)
+    song = Handler(source_file_path)
+    artist_local, title_local = song.extract()
+    list_of_songs = song.request()
     name_local = f"{artist_local} - {title_local}"
-    string = Analyzer()
 
     if not list_of_songs:
         print("Could not find", name_local)
         return
     
-    for song in list_of_songs:
+    for item in list_of_songs:
+        song.set_info(item)
+        print("    Found:", song.filename)
+        name_json = f"{song.artist} - {song.title}"
 
-        artist   = parse_json(parse_json(song, "performer"), "name")
-        title    = parse_json(song, "title")
-        track_id = parse_json(song, "id")
-        filename = generate_filename(song)
-
-        print("    Found:", filename)
-        name_json = f"{artist} - {title}"
-
-        if string.has_exception(title):
+        if Analyzer.has_exception(song.title):
             print("An exception! Heading to the next one...\n")
             continue
 
-        if does_file_exist(flac_folder_path, filename):
+        if does_file_exist(flac_folder_path, song.filename):
             print("File already exists. Skipping...\n")
             check_and_rename(source_file_path, "mp3f")
             continue
 
-        if (string.has_cyrillic(name_local) or string.has_cyrillic(name_json)):
+        if (Analyzer.has_cyrillic(name_local) or Analyzer.has_cyrillic(name_json)):
             song_action = song_handling()
             
             if song_action == Action.download:
-                perform_download(track_id, flac_folder_path, filename)                
+                perform_download(song.track_id, flac_folder_path, song.filename)                
                 check_and_rename(source_file_path, "mp3f")
                 break
             elif song_action == Action.skip:
@@ -432,8 +420,8 @@ def process_and_handle_songs(source_file_path: str, flac_folder_path: str) -> No
             else:
                 raise ValueError("Unknown error occurred") 
         else:
-            if string.is_similar(name_local, name_json):
-                perform_download(track_id, flac_folder_path, filename)      
+            if Analyzer.is_similar(name_local, name_json):
+                perform_download(song.track_id, flac_folder_path, song.filename)      
                 check_and_rename(source_file_path, "mp3f")
             else:
                 print("Songs do not match\n")
@@ -445,11 +433,11 @@ def main():
         if filename.endswith("." + SOURCE_EXTENSION):
             mp3_filepath = os.path.join(SOURCE_FOLDER, filename)
 
-            try:
-                process_and_handle_songs(mp3_filepath, FLAC_FOLDER)
-            except Exception as e:
-                error_message = f"An error occurred while processing {mp3_filepath}: {str(e)}"
-                print(error_message)
+            # try:
+            process_and_handle_songs(mp3_filepath, FLAC_FOLDER)
+            # except Exception as e:
+            #     error_message = f"An error occurred while processing {mp3_filepath}: {str(e)}"
+            #     print(error_message)
              
 if __name__ == "__main__":
     main()
