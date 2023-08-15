@@ -16,7 +16,7 @@ def check_and_rename(filepath: str, ext: str) -> None:
 
 def perform_download(track_id: int, folder_path: str, filename: str) -> None:
     print("FLAC is being downloaded")
-    downloader = Downloader(track_id, folder_path, filename)
+    downloader = SongDownload(track_id, folder_path, filename)
     downloader.with_progress_bar()
 
 def song_handling() -> Action:
@@ -39,7 +39,7 @@ def song_handling() -> Action:
             print("Invalid input. Please enter '1' or '2' or '3'.")
 
 def process_songs(source_file_path: str, flac_folder_path: str) -> None:
-    song = Song(source_file_path)
+    song = SongHandler(source_file_path)
     artist_local, title_local = song.extract()
     songs = song.request()
     name_local = f"{artist_local} - {title_local}"
@@ -53,7 +53,7 @@ def process_songs(source_file_path: str, flac_folder_path: str) -> None:
         print("    Found:", song.filename)
         name_json = f"{song.artist} - {song.title}"
 
-        if Analyzer.has_exception(song.title):
+        if StringAnalyzer.has_exception(song.title):
             print("An exception! Heading to the next one...\n")
             continue
 
@@ -62,7 +62,7 @@ def process_songs(source_file_path: str, flac_folder_path: str) -> None:
             check_and_rename(source_file_path, "mp3f")
             continue
 
-        if (Analyzer.has_cyrillic(name_local) or Analyzer.has_cyrillic(name_json)):
+        if (StringAnalyzer.has_cyrillic(name_local) or StringAnalyzer.has_cyrillic(name_json)):
             song_action = song_handling()
             
             if song_action == Action.DOWNLOAD:
@@ -82,7 +82,7 @@ def process_songs(source_file_path: str, flac_folder_path: str) -> None:
                 raise ValueError("Error occurred") 
             
         else:
-            if Analyzer.is_similar(name_local, name_json):
+            if StringAnalyzer.is_similar(name_local, name_json):
                 perform_download(song.track_id, flac_folder_path, song.filename)      
                 check_and_rename(source_file_path, "mp3f")
             else:

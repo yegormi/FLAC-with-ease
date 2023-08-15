@@ -13,7 +13,7 @@ class Action(Enum):
     EXIT     = 3
     QUIT     = 4
 
-class Downloader:
+class SongDownload:
     DOWNLOAD_URL = "https://slavart-api.gamesdrive.net/api/download/track"
 
     def __init__(self, track_id: int, folder_path: str, filename: str) -> None:
@@ -22,7 +22,7 @@ class Downloader:
         self.filename = filename
 
     def _url(self) -> str:
-        return f"{Downloader.DOWNLOAD_URL}?id={self.track_id}"
+        return f"{self.DOWNLOAD_URL}?id={self.track_id}"
 
     def request(self) -> requests.Response:
         if const.DEBUG_COMPLEX:
@@ -53,7 +53,7 @@ class Downloader:
                     shutil.copyfileobj(downloaded, file)
                     print("\n")
 
-class Analyzer:
+class StringAnalyzer:
     EXCLUDE_ITEMS = ["Instrumental", "Karaoke"]
     SIMILARITY_VALUE = 90
     KEYWORDS_TO_DELETE_AFTER = ["feat", "(", ",", "&", "Музыка В Машину 2023"]
@@ -68,17 +68,17 @@ class Analyzer:
     
     @staticmethod
     def has_exception(input_string: str) -> bool:
-        return Analyzer.has_word(input_string, Analyzer.EXCLUDE_ITEMS)
+        return StringAnalyzer.has_word(input_string, StringAnalyzer.EXCLUDE_ITEMS)
 
     @staticmethod
     def is_similar(string1: str, string2: str) -> bool:
         similarity_ratio = fuzz.token_set_ratio(string1, string2)
         print("Similarity:", similarity_ratio)
-        return similarity_ratio >= Analyzer.SIMILARITY_VALUE
+        return similarity_ratio >= StringAnalyzer.SIMILARITY_VALUE
 
     @staticmethod
     def remove_after_keyword(input_string: str) -> str:
-        for keyword in Analyzer.KEYWORDS_TO_DELETE_AFTER:
+        for keyword in StringAnalyzer.KEYWORDS_TO_DELETE_AFTER:
             if keyword in input_string:
                 input_string = input_string.split(keyword)[0]
                 break
@@ -91,7 +91,7 @@ class Analyzer:
             print(f"Extracted: {match.group()}")
         return match.group() if match else ""
 
-class Song:
+class SongHandler:
     SEARCH_URL = "https://slavart.gamesdrive.net/api/search"
     LOOK_FOR_ORIGINAL = True
 
@@ -124,8 +124,8 @@ class Song:
                     print(f"\nExtracted: {artist} - {title}")
                 
                 if self.LOOK_FOR_ORIGINAL:
-                    artist = Analyzer.remove_after_keyword(artist)
-                    title = Analyzer.remove_after_keyword(title)
+                    artist = StringAnalyzer.remove_after_keyword(artist)
+                    title = StringAnalyzer.remove_after_keyword(title)
                     if const.DEBUG:
                         print(f"  Cleaned: {artist} - {title}")
             
@@ -183,7 +183,7 @@ class Song:
         self._title         = self.parse(data, "title")
         self._bit_depth     = self.parse(data, "maximum_bit_depth")
         self._sampling_rate = self.parse(data, "maximum_sampling_rate")
-        self._year          = Analyzer.extract_from(_copyright, r'\b\d{4}\b')
+        self._year          = StringAnalyzer.extract_from(_copyright, r'\b\d{4}\b')
         self._filename      = f"{self._artist} - {self._title} ({self._year}) [FLAC] [{self._bit_depth}B - {self._sampling_rate}kHz].flac"
     
     @property
