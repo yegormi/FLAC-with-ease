@@ -99,10 +99,10 @@ class Song:
         self.source_file = source_file
         self._data = None
         self._file_artist, self._file_title = None, None
-        self._artist, self._title            = None, None
+        self._artist, self._title = None, None
         self._bit_depth, self._sampling_rate = None, None
-        self._year          = None
-        self._track_id, self._filename       = None, None
+        self._track_id, self._filename = None, None
+        self._year = None
 
     def extract(self) -> Tuple[str, str]:
         """
