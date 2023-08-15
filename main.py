@@ -28,13 +28,13 @@ def song_handling() -> Action:
         print("    4. Quit")
         user_input = str(input("Enter your choice: "))
         if user_input == '1':
-            return Action.download
+            return Action.DOWNLOAD
         elif user_input == '2':
-            return Action.skip
+            return Action.SKIP
         elif user_input == '3':
-            return Action.exit
+            return Action.EXIT
         elif user_input == '4':
-            return Action.quit
+            return Action.QUIT
         else:
             print("Invalid input. Please enter '1' or '2' or '3'.")
 
@@ -65,17 +65,17 @@ def process_songs(source_file_path: str, flac_folder_path: str) -> None:
         if (Analyzer.has_cyrillic(name_local) or Analyzer.has_cyrillic(name_json)):
             song_action = song_handling()
             
-            if song_action == Action.download:
+            if song_action == Action.DOWNLOAD:
                 perform_download(song.track_id, flac_folder_path, song.filename)                
                 check_and_rename(source_file_path, "mp3f")
                 break
-            elif song_action == Action.skip:
+            elif song_action == Action.SKIP:
                 print("Skipping this song\n")
                 continue
-            elif song_action == Action.exit:
+            elif song_action == Action.EXIT:
                 print("Exited successfully")
                 break
-            elif song_action == Action.quit:
+            elif song_action == Action.QUIT:
                 print("Program has been successfully terminated")
                 exit()
             else:

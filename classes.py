@@ -8,10 +8,10 @@ from fuzzywuzzy import fuzz
 import requests
 
 class Action(Enum):
-    download = 1
-    skip     = 2
-    exit     = 3
-    quit     = 4
+    DOWNLOAD = 1
+    SKIP     = 2
+    EXIT     = 3
+    QUIT     = 4
 
 class Downloader:
     DOWNLOAD_URL = "https://slavart-api.gamesdrive.net/api/download/track"
