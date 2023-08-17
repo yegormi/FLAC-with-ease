@@ -48,7 +48,7 @@ def process_songs(filepath: str, folder_path: str) -> None:
     if not songs:
         print("Could not find", name_local)
         return
-    
+
     for item in songs:
         song.set_info(item)
         print("    Found:", song.filename)
@@ -66,29 +66,27 @@ def process_songs(filepath: str, folder_path: str) -> None:
         if (StringAnalyzer.has_cyrillic(name_local) or StringAnalyzer.has_cyrillic(name_json)):
             match song_handling():
                 case Action.DOWNLOAD:
-                    perform_download(song.track_id, folder_path, song.filename)                
+                    perform_download(song.track_id, folder_path, song.filename)
                     check_and_rename(filepath, "mp3f")
                 case Action.SKIP:
                     print("Skipping this song\n")
-                    continue
                 case Action.EXIT:
                     print("Exited successfully")
                     break
                 case Action.QUIT:
                     print("Program has been successfully terminated")
                     exit()
+        elif StringAnalyzer.is_similar(name_local, name_json):
+            perform_download(song.track_id, folder_path, song.filename)      
+            check_and_rename(filepath, "mp3f")
         else:
-            if StringAnalyzer.is_similar(name_local, name_json):
-                perform_download(song.track_id, folder_path, song.filename)      
-                check_and_rename(filepath, "mp3f")
-            else:
-                print("Songs do not match\n")
+            print("Songs do not match\n")
 
 def main():
     source_files = os.listdir(const.SOURCE_FOLDER)
-    
+
     for file in source_files:
-        if file.endswith("." + const.SOURCE_EXTENSION):
+        if file.endswith(f".{const.SOURCE_EXTENSION}"):
             mp3_filepath = os.path.join(const.SOURCE_FOLDER, file)
             try:
                 process_songs(mp3_filepath, const.FLAC_FOLDER)
