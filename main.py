@@ -27,19 +27,20 @@ def song_handling() -> Action:
         print("    3. Exit")
         print("    4. Quit")
         user_input = str(input("Enter your choice: "))
-        if user_input == '1':
-            return Action.DOWNLOAD
-        elif user_input == '2':
-            return Action.SKIP
-        elif user_input == '3':
-            return Action.EXIT
-        elif user_input == '4':
-            return Action.QUIT
-        else:
-            print("Invalid input. Please enter '1' or '2' or '3'.")
+        match user_input:
+            case "1":
+                return Action.DOWNLOAD
+            case "2":
+                return Action.SKIP
+            case "3":
+                return Action.EXIT
+            case "4":
+                return Action.QUIT
+            case _:
+                print("Invalid input. Please make an appropriate choice.")
 
-def process_songs(source_file_path: str, flac_folder_path: str) -> None:
-    song = SongHandler(source_file_path)
+def process_songs(filepath: str, folder_path: str) -> None:
+    song = SongHandler(filepath)
     artist_local, title_local = song.extract()
     songs = song.request()
     name_local = f"{artist_local} - {title_local}"
@@ -57,34 +58,29 @@ def process_songs(source_file_path: str, flac_folder_path: str) -> None:
             print("An exception! Heading to the next one...\n")
             continue
 
-        if File.exists(song.filename, flac_folder_path):
+        if File.exists(song.filename, folder_path):
             print("File already exists. Skipping...\n")
-            check_and_rename(source_file_path, "mp3f")
+            check_and_rename(filepath, "mp3f")
             continue
 
         if (StringAnalyzer.has_cyrillic(name_local) or StringAnalyzer.has_cyrillic(name_json)):
-            song_action = song_handling()
-            
-            if song_action == Action.DOWNLOAD:
-                perform_download(song.track_id, flac_folder_path, song.filename)                
-                check_and_rename(source_file_path, "mp3f")
-                break
-            elif song_action == Action.SKIP:
-                print("Skipping this song\n")
-                continue
-            elif song_action == Action.EXIT:
-                print("Exited successfully")
-                break
-            elif song_action == Action.QUIT:
-                print("Program has been successfully terminated")
-                exit()
-            else:
-                raise ValueError("Error occurred") 
-            
+            match song_handling():
+                case Action.DOWNLOAD:
+                    perform_download(song.track_id, folder_path, song.filename)                
+                    check_and_rename(filepath, "mp3f")
+                case Action.SKIP:
+                    print("Skipping this song\n")
+                    continue
+                case Action.EXIT:
+                    print("Exited successfully")
+                    break
+                case Action.QUIT:
+                    print("Program has been successfully terminated")
+                    exit()
         else:
             if StringAnalyzer.is_similar(name_local, name_json):
-                perform_download(song.track_id, flac_folder_path, song.filename)      
-                check_and_rename(source_file_path, "mp3f")
+                perform_download(song.track_id, folder_path, song.filename)      
+                check_and_rename(filepath, "mp3f")
             else:
                 print("Songs do not match\n")
 
