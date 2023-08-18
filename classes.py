@@ -1,6 +1,8 @@
 import json
 import re
 import shutil
+import os
+import eyed3
 from enum import Enum
 from typing import List, Tuple
 from tqdm.auto import tqdm
@@ -35,12 +37,12 @@ class SongDownload:
 
             if const.DEBUG_COMPLEX:
                 print("Response:", response.status_code)
-            
+
             response.raise_for_status()  # Raise an exception for non-200 responses
             return response
-        
+
         except requests.exceptions.RequestException as e:
-            print("An error occurred:", str(e))
+            print("An error occurred:", e)
 
         return None
 
@@ -55,7 +57,7 @@ class SongDownload:
                     print("\n")
 
 class StringAnalyzer:
-    EXCLUDE_ITEMS = ["Instrumental", "Karaoke"]
+    EXCLUDE_ITEMS = ["Instrumental", "Karaoke", "Originally Performed"]
     SIMILARITY_VALUE = 90
     KEYWORDS_TO_DELETE_AFTER = ["feat", "(", ",", "&", "Музыка В Машину 2023"]
 
@@ -145,30 +147,32 @@ class SongHandler:
         """
         if self._data is not None:
             return self._data
-        
+
         query = f"{self._file_artist} {self._file_title}".replace(" ", "%20")
         url = f"{self.SEARCH_URL}?q={query}"
-        
+
         try:
-            response = requests.get(url)
-            response.raise_for_status()  # Raise exception for non-200 status codes
-            
-            data = response.json()
-            if const.DEBUG_COMPLEX:
-                print(f"Parsed JSON for \"{self._file_artist} - {self._file_title}\"")
-            
-            self._data = data.get('tracks', {}).get('items', [])
-            return self._data
-        
+            return self._try_get_json(url)
         except requests.exceptions.RequestException as e:
             print("Request error:", e)
         except json.decoder.JSONDecodeError as e:
             print("Error parsing JSON response:", e)
-        
+
         return None
 
+    def _try_get_json(self, url):
+        response = requests.get(url)
+        response.raise_for_status()  # Raise exception for non-200 status codes
+
+        data = response.json()
+        if const.DEBUG_COMPLEX:
+            print(f"Parsed JSON for \"{self._file_artist} - {self._file_title}\"")
+
+        self._data = data.get('tracks', {}).get('items', [])
+        return self._data
+
     @staticmethod
-    def parse(data: dict,  key: str) -> dict | str | None:
+    def _parse(data: dict,  key: str) -> dict | str | None:
         value = data.get(key)
         
         if const.DEBUG_COMPLEX and value is not None:
@@ -177,13 +181,13 @@ class SongHandler:
         return value
 
     def set_info(self, data: dict) -> None:
-        _artist_dict        = self.parse(data, "performer")
-        _copyright          = self.parse(data, "copyright")
-        self._track_id      = self.parse(data, "id")
+        _artist_dict        = self._parse(data, "performer")
+        _copyright          = self._parse(data, "copyright")
+        self._track_id      = self._parse(data, "id")
         self._artist        = _artist_dict.get('name')
-        self._title         = self.parse(data, "title")
-        self._bit_depth     = self.parse(data, "maximum_bit_depth")
-        self._sampling_rate = self.parse(data, "maximum_sampling_rate")
+        self._title         = self._parse(data, "title")
+        self._bit_depth     = self._parse(data, "maximum_bit_depth")
+        self._sampling_rate = self._parse(data, "maximum_sampling_rate")
         self._year          = StringAnalyzer.extract_from(_copyright, r'\b\d{4}\b')
         self._filename      = f"{self._artist} - {self._title} ({self._year}) [FLAC] [{self._bit_depth}B - {self._sampling_rate}kHz].flac"
     
