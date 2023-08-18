@@ -35,12 +35,12 @@ class SongDownload:
 
             if const.DEBUG_COMPLEX:
                 print("Response:", response.status_code)
-            
+
             response.raise_for_status()  # Raise an exception for non-200 responses
             return response
-        
+
         except requests.exceptions.RequestException as e:
-            print("An error occurred:", str(e))
+            print("An error occurred:", e)
 
         return None
 
