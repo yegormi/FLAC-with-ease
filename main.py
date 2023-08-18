@@ -8,12 +8,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 eyed3.log.setLevel("ERROR")
 
 
-# def check_and_rename(filepath: str, ext: str) -> None:
-#     if const.RENAME_SOURCE_FILES:
-#         file = File(filepath)
-#         file.extension_to(ext)
-#         print("Source file has been renamed")
-
 def perform_download(track_id: int, folder_path: str, filename: str) -> None:
     print("FLAC is being downloaded")
     downloader = SongDownload(track_id, folder_path, filename)
