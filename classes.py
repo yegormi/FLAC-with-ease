@@ -57,7 +57,7 @@ class SongDownload:
                     print("\n")
 
 class StringAnalyzer:
-    EXCLUDE_ITEMS = ["Instrumental", "Karaoke"]
+    EXCLUDE_ITEMS = ["Instrumental", "Karaoke", "Originally Performed"]
     SIMILARITY_VALUE = 90
     KEYWORDS_TO_DELETE_AFTER = ["feat", "(", ",", "&", "Музыка В Машину 2023"]
 
@@ -160,7 +160,6 @@ class SongHandler:
 
         return None
 
-    # TODO Rename this here and in `request`
     def _try_get_json(self, url):
         response = requests.get(url)
         response.raise_for_status()  # Raise exception for non-200 status codes
