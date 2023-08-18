@@ -172,7 +172,7 @@ class SongHandler:
         return self._data
 
     @staticmethod
-    def parse(data: dict,  key: str) -> dict | str | None:
+    def _parse(data: dict,  key: str) -> dict | str | None:
         value = data.get(key)
         
         if const.DEBUG_COMPLEX and value is not None:
@@ -181,13 +181,13 @@ class SongHandler:
         return value
 
     def set_info(self, data: dict) -> None:
-        _artist_dict        = self.parse(data, "performer")
-        _copyright          = self.parse(data, "copyright")
-        self._track_id      = self.parse(data, "id")
+        _artist_dict        = self._parse(data, "performer")
+        _copyright          = self._parse(data, "copyright")
+        self._track_id      = self._parse(data, "id")
         self._artist        = _artist_dict.get('name')
-        self._title         = self.parse(data, "title")
-        self._bit_depth     = self.parse(data, "maximum_bit_depth")
-        self._sampling_rate = self.parse(data, "maximum_sampling_rate")
+        self._title         = self._parse(data, "title")
+        self._bit_depth     = self._parse(data, "maximum_bit_depth")
+        self._sampling_rate = self._parse(data, "maximum_sampling_rate")
         self._year          = StringAnalyzer.extract_from(_copyright, r'\b\d{4}\b')
         self._filename      = f"{self._artist} - {self._title} ({self._year}) [FLAC] [{self._bit_depth}B - {self._sampling_rate}kHz].flac"
     
