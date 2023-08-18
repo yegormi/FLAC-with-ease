@@ -33,18 +33,23 @@ def song_handling() -> Action:
             case _:
                 print("Invalid input. Please make an appropriate choice.")
 
+def create_folder(folder_name: str, path: str) -> str:
+    folder_path = os.path.join(path, folder_name)
+
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+        print(":~>  Created folder", folder_path)
+        return folder_path
+
+
 def move_to(filepath: str, folder_name: str) -> None:
     if os.path.exists(filepath):
+        path = create_folder(folder_name, const.SOURCE_FOLDER)
+
         filename = os.path.basename(filepath)
-        folder_path = os.path.join(const.SOURCE_FOLDER, folder_name)
-
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
-            print(":~>  Created folder", folder_path)
-
-        new_filepath = os.path.join(folder_path, filename)
+        new_filepath = os.path.join(path, filename)
         shutil.move(filepath, new_filepath)
-        print(f":~>  Moved {filename} to {folder_path}")
+        print(f":~>  Moved {filename} to {path}")
     else:
         print(":~> Source file does not exist")
 
@@ -96,13 +101,15 @@ def process_songs(filepath: str, folder_path: str) -> None:
             continue
 
 def main():
+    dir_name = os.path.dirname(const.SOURCE_FOLDER)
+    folder_path = create_folder("FLAC", dir_name)
     source_files = os.listdir(const.SOURCE_FOLDER)
 
     for file in source_files:
         if file.endswith(f".{const.SOURCE_EXTENSION}"):
             mp3_filepath = os.path.join(const.SOURCE_FOLDER, file)
             try:
-                process_songs(mp3_filepath, const.FLAC_FOLDER)
+                process_songs(mp3_filepath, folder_path)
             except Exception as e:
                 print(f"An error occurred while processing {mp3_filepath}: {str(e)}")
 
