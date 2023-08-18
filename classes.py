@@ -1,6 +1,8 @@
 import json
 import re
 import shutil
+import os
+import eyed3
 from enum import Enum
 from typing import List, Tuple
 from tqdm.auto import tqdm
@@ -145,27 +147,30 @@ class SongHandler:
         """
         if self._data is not None:
             return self._data
-        
+
         query = f"{self._file_artist} {self._file_title}".replace(" ", "%20")
         url = f"{self.SEARCH_URL}?q={query}"
-        
+
         try:
-            response = requests.get(url)
-            response.raise_for_status()  # Raise exception for non-200 status codes
-            
-            data = response.json()
-            if const.DEBUG_COMPLEX:
-                print(f"Parsed JSON for \"{self._file_artist} - {self._file_title}\"")
-            
-            self._data = data.get('tracks', {}).get('items', [])
-            return self._data
-        
+            return self._try_get_json(url)
         except requests.exceptions.RequestException as e:
             print("Request error:", e)
         except json.decoder.JSONDecodeError as e:
             print("Error parsing JSON response:", e)
-        
+
         return None
+
+    # TODO Rename this here and in `request`
+    def _try_get_json(self, url):
+        response = requests.get(url)
+        response.raise_for_status()  # Raise exception for non-200 status codes
+
+        data = response.json()
+        if const.DEBUG_COMPLEX:
+            print(f"Parsed JSON for \"{self._file_artist} - {self._file_title}\"")
+
+        self._data = data.get('tracks', {}).get('items', [])
+        return self._data
 
     @staticmethod
     def parse(data: dict,  key: str) -> dict | str | None:
