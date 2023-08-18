@@ -33,33 +33,18 @@ def song_handling() -> Action:
             case _:
                 print("Invalid input. Please make an appropriate choice.")
 
-def check_and_move(filepath: str) -> None:
+def move_to(filepath: str, folder_name: str) -> None:
     if os.path.exists(filepath):
         filename = os.path.basename(filepath)
-        done_folder = os.path.join(const.SOURCE_FOLDER, "done")
+        folder_path = os.path.join(const.SOURCE_FOLDER, folder_name)
 
-        if not os.path.exists(done_folder):
-            os.makedirs(done_folder)
-            print(":~>  Created folder", done_folder)
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+            print(":~>  Created folder", folder_path)
 
-        new_filepath = os.path.join(done_folder, filename)
+        new_filepath = os.path.join(folder_path, filename)
         shutil.move(filepath, new_filepath)
-        print(f":~>  Moved {filename} to {done_folder}")
-    else:
-        print(":~> Source file does not exist")
-
-def check_and_move(filepath: str) -> None:
-    if os.path.exists(filepath):
-        filename = os.path.basename(filepath)
-        done_folder = os.path.join(const.SOURCE_FOLDER, "done")
-
-        if not os.path.exists(done_folder):
-            os.makedirs(done_folder)
-            print(":~>  Created folder", done_folder)
-
-        new_filepath = os.path.join(done_folder, filename)
-        shutil.move(filepath, new_filepath)
-        print(f":~>  Moved {filename} to {done_folder}")
+        print(f":~>  Moved {filename} to {folder_path}")
     else:
         print(":~> Source file does not exist")
 
@@ -84,14 +69,14 @@ def process_songs(filepath: str, folder_path: str) -> None:
 
         if File.exists(song.filename, folder_path):
             print("File already exists. Skipping...\n")
-            check_and_move(filepath)
+            move_to(filepath, "done")
             continue
 
         if (StringAnalyzer.has_cyrillic(name_local) or StringAnalyzer.has_cyrillic(name_json)):
             match song_handling():
                 case Action.DOWNLOAD:
                     perform_download(song.track_id, folder_path, song.filename)
-                    check_and_move(filepath)
+                    move_to(filepath, "done")
                     break
                 case Action.SKIP:
                     print("Skipping this song\n")
@@ -104,7 +89,7 @@ def process_songs(filepath: str, folder_path: str) -> None:
                     exit()
         elif StringAnalyzer.is_similar(name_local, name_json):
             perform_download(song.track_id, folder_path, song.filename)      
-            check_and_move(filepath)
+            move_to(filepath, "done")
             break
         else:
             print("Songs do not match\n")
