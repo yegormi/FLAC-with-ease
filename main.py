@@ -39,7 +39,8 @@ def create_folder(folder_name: str, path: str) -> str:
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
         print(":~>  Created folder", folder_path)
-        return folder_path
+        
+    return folder_path
 
 
 def move_to(filepath: str, folder_name: str) -> None:
@@ -85,7 +86,6 @@ def process_songs(filepath: str, folder_path: str) -> None:
                     break
                 case Action.SKIP:
                     print("Skipping this song\n")
-                    continue
                 case Action.EXIT:
                     print("Exited successfully")
                     break
@@ -98,7 +98,6 @@ def process_songs(filepath: str, folder_path: str) -> None:
             break
         else:
             print("Songs do not match\n")
-            continue
 
 def main():
     dir_name = os.path.dirname(const.SOURCE_FOLDER)
